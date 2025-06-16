@@ -4,7 +4,7 @@ from typing import Annotated,List
 
 
 class ItemBase(BaseModel):
-    name : str
+    name : str 
     description : str | None = None
     price : float
 
@@ -15,7 +15,16 @@ class ItemCreate(ItemBase):
 
 class ItemDisplay(ItemBase):
     id : int 
-    caregory : 'CategoryDisplay'
+    category_name : str
+
+    
+class ItemUpdate(ItemBase):
+    name : str | None
+    description : str | None 
+    price : float | None
+    category_id : int | None
+
+
 class Item(ItemBase):
     id : int
     category_id : int
@@ -44,3 +53,9 @@ class CategoryDisplay(CategoryBase):
 class Category(CategoryBase):
     id : int
     items : List[Item] = []
+
+    class Config:
+        orm_model = True
+
+class CategoryUpdate(CategoryBase):
+    name : str | None = None

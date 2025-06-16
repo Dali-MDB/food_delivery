@@ -2,7 +2,7 @@ from app.database import Base
 from sqlalchemy import Column,ForeignKey,Integer,Numeric,String,Text,DateTime,Enum
 from sqlalchemy.orm import relationship
 from .items import Item
-#from .reviews import OrderReview
+from .reviews import OrderReview
 
 
 class ItemOrder(Base):
@@ -16,8 +16,15 @@ class ItemOrder(Base):
     item_id = Column(Integer,ForeignKey('items.id'))
 
     order = relationship('Order',back_populates='item_orders')
-    item = relationship(Item,back_populates='item_orders')
+    item = relationship(Item,back_populates='orders')
 
+
+    @property
+    def item_name(self):
+        return self.item.name
+
+    def __init__(self):
+        self.total_price = self.quantity * self.item.price
     def __repr__(self):
         return f'order {self.id} of {self.item} linked to {self.order}'
 
@@ -44,9 +51,17 @@ class Order(Base):
 
     user = relationship('User',back_populates='orders')
     item_orders = relationship(ItemOrder,back_populates='order')
- #   review = relationship(OrderReview,back_populates='order')
+    review = relationship(OrderReview,back_populates='order',uselist=False)
 
+    @property
+    def calculate_total(self):
+        total = 0
+        for order in self.item_orders:
+            total += order.total_price
+        return total
 
+    def update_status(self,new_status:order_status):
+        self.status = new_status
 
     def __repr__(self):
         return f'order: {self.id} - '

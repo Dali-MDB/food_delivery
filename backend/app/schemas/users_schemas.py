@@ -16,7 +16,6 @@ class UserCreate(UserBase):
 
 class UserDisplay(UserBase):
     id : int 
-    orders : List[Order] | None = []
 
     class config:
         orm_mode = True

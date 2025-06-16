@@ -3,18 +3,27 @@ from typing import Annotated,List
 from .items_schemas import Item,ItemDisplay
 from app.models.orders import order_status
 
+from enum import Enum as PyEnum
+class order_status (str, PyEnum):
+    PENDING = "PENDING"
+    RECEIVED = "RECEIVED"
+    PREPARING = "PREPARING"
+    DELIVERING = "DELIVERING"
+    DELIVERED = "DELIVERED"
+    CANCELLED = "CANCELLED"
+
 
 class ItemOrderBase(BaseModel):
-    quantity : int
+    quantity : int = 1
 
 class ItemOrderCreate(ItemOrderBase):
-    order_id : int
     item_id : int
 
 class ItemOrderDisplay(ItemOrderBase):
     id : int
-    item : ItemDisplay
-    order : 'OrderDisplay'
+    total_price : float
+    item_name : str
+    order_id : int
 
 
 class ItemOrder(ItemOrderBase):
@@ -42,11 +51,14 @@ class OrderCreate(OrderBase):
 
 class OrderDisplay(OrderBase):
     id : int
+    status : order_status
+    calculate_total : float
     item_orders : List[ItemOrder]|None = []
 
 
 class Order(OrderBase):
     id : int 
+    status : order_status
     item_orders : List[ItemOrder]|None = []
 
     class Config:

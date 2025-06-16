@@ -65,7 +65,7 @@ def register(user:UserCreate,db:sessionDep):
 
 def authenticate(email:str,password:str, db:sessionDep):
     #first we query the user
-    user = db.query(User).filter(email==email).first()
+    user = db.query(User).filter(User.email==email).first()
     if not user:
         return False
     if not pwd_context.verify(password,user.password):
@@ -75,7 +75,9 @@ def authenticate(email:str,password:str, db:sessionDep):
 
 @auth_router.post('/login/')
 def login(form_data : Annotated[OAuth2PasswordRequestForm,Depends()],db:sessionDep):
+    print(form_data.username)
     user = authenticate(form_data.username,form_data.password,db)
+    
     if not user:
         raise HTTPException(
             status_code=401,
@@ -109,7 +111,7 @@ def current_user(token:Annotated[str,oauth2_scheme],db:Session):
         raise HTTPException(status_code=401, detail="Invalid token")
     email = payload['sub']
 
-    user = db.query(User).filter(email==email).first()
+    user = db.query(User).filter(User.email==email).first()
     return user
 
 @auth_router.get('/current_user/',response_model=UserDisplay)

@@ -15,7 +15,7 @@ class User(Base):
     is_admin = Column(Boolean,default=False)
     
     orders = relationship('Order',back_populates="user")
-  #  reviews = relationship('Review',back_populates='user')
+    reviews = relationship('Review',back_populates='user')
 
     def __repr__(self):
         p = f' - {self.phone}' if self.phone else ''

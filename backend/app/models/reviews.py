@@ -1,5 +1,4 @@
 
-'''
 from app.database import Base
 from sqlalchemy import Text, ForeignKey, Column, Integer, String
 from sqlalchemy.orm import relationship
@@ -32,9 +31,9 @@ class OrderReview(Review):
     __tablename__ = 'orderreviews'
 
     id = Column(Integer, ForeignKey('reviews.id'), primary_key=True)
-    order_id = Column(Integer, ForeignKey('orders.id'), index=True)
+    order_id = Column(Integer, ForeignKey('orders.id'),unique=True, nullable=True)
 
-    order = relationship('Order', back_populates='reviews')
+    order = relationship('Order', back_populates='review')
 
     __mapper_args__ = {
         'polymorphic_identity': 'order_review',
@@ -61,4 +60,3 @@ class ItemReview(Review):
         return f'Item report : {self.id} on {self.item}'
 
         
-'''
