@@ -1,15 +1,19 @@
-
 from app.database import Base
-from sqlalchemy import Text, ForeignKey, Column, Integer, String
+from sqlalchemy import Text, ForeignKey, Column, Integer, String, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declared_attr
+from enum import Enum as PyEnum
 
+class review_type(str, PyEnum):
+    GENERAL = "general"
+    ORDER = "order_review"
+    ITEM = "item_review"
 
 class Review(Base):
     __tablename__ = 'reviews'
 
     id = Column(Integer, primary_key=True, index=True)
-    type = Column(String(50))  # discriminator column
+    type = Column(Enum(review_type), default=review_type.GENERAL)  # discriminator column
 
     user_id = Column(Integer, ForeignKey('users.id'), index=True,nullable=True)
     content = Column(Text)
@@ -18,7 +22,7 @@ class Review(Base):
     user = relationship('User', back_populates='reviews')
 
     __mapper_args__ = {
-        'polymorphic_identity': 'review',
+        'polymorphic_identity': 'general',  
         'polymorphic_on': type
     }
 
@@ -36,7 +40,7 @@ class OrderReview(Review):
     order = relationship('Order', back_populates='review')
 
     __mapper_args__ = {
-        'polymorphic_identity': 'order_review',
+        'polymorphic_identity': 'order_review', 
     }
 
     def __repr__(self):

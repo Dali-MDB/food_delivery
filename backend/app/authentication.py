@@ -12,6 +12,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from fastapi import status
 from sqlalchemy import or_
+from app.management.admin_permission import verify_permission
 
 SECRET_KEY = 'n4f44r7232jxe23m23rc4r84e?9391!181669344cnfr44rh34ur23r'
 ALGORITHM = "HS256"
@@ -116,10 +117,47 @@ def current_user(token:Annotated[str,oauth2_scheme],db:Session):
 
 @auth_router.get('/current_user/',response_model=UserDisplay)
 async def ge_current_user(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
-    return current_user(token,db)
+    return  current_user(token,db)
     
+
+@auth_router.get('/opop/')
+async def ge_current_user(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    try:
+        user = current_user(token,db)
+    except:
+        return {'details':'not authenticated'}
+    return {'user_id':user.id}
+    
+
+
+#a function to add a new admin
+@auth_router.post('/add_admin/',response_model=UserDisplay)
+def add_admin(user:UserCreate,token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    #only admin can add a new admin
+    user_current = current_user(token,db)
+    verify_permission(user_current)
+    user_indb = db.query(User).filter(
+        or_(
+            User.email==user.email,
+            User.username==user.username,
+            User.phone==user.phone
+        )
+    ).first()
+    if user_indb:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail="user with this email/username/phone is already registered")
+    hashed_password = pwd_context.hash(user.password)
+    user_data = user.model_dump()
+    user_data["password"] = hashed_password
+    user_data["is_admin"] = True
+    user = User(**user_data)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user 
 
     
     
+
+
 
 

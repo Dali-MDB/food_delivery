@@ -2,6 +2,7 @@ from pydantic import BaseModel,Field,EmailStr
 from typing import Annotated,List
 from .items_schemas import Item,ItemDisplay
 from app.models.orders import order_status
+from datetime import datetime
 
 from enum import Enum as PyEnum
 class order_status (str, PyEnum):
@@ -37,9 +38,8 @@ class ItemOrder(ItemOrderBase):
 
 
 class OrderBase(BaseModel):
-    address : str
-    ordered_at : str|None
-    session : str
+    address : str | None
+    ordered_at : datetime|None
     status : order_status = order_status.PENDING
 
 
@@ -53,7 +53,7 @@ class OrderDisplay(OrderBase):
     id : int
     status : order_status
     calculate_total : float
-    item_orders : List[ItemOrder]|None = []
+    item_orders : List[ItemOrderDisplay]|None = []
 
 
 class Order(OrderBase):
