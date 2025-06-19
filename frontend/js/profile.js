@@ -1,15 +1,17 @@
 (function() {
 // Profile Page JavaScript
-alert('profile.js is running!');
 if (!localStorage.getItem('authToken')) {
-    window.location.replace('../html/index.html');
+    alert("You cannot access this page. Please login first.");
+    window.location.replace('/frontend/html/index.html');
 }
 
 console.log('=== PROFILE.JS SCRIPT LOADED ===');
 
 let currentUser = null;
 let userOrders = [];
+let userReviewsByType = {};
 let userReviews = [];
+let currentReviewTypeFilter = 'all';
 
 // API Configuration - Update this with your actual API base URL
 const API_BASE_URL = 'http://localhost:8000'; // Change this to your FastAPI server URL
@@ -70,7 +72,7 @@ async function apiCall(endpoint, options = {}) {
                 // Token expired or invalid
                 localStorage.removeItem('authToken');
                 showMessage('Session expired. Please login again.', 'warning');
-                setTimeout(() => window.location.href = 'index.html', 2000);
+                setTimeout(() => window.location.href = '/frontend/html/index.html', 2000);
                 throw new Error('Authentication failed');
             }
             
@@ -100,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!authToken) {
         console.log('No auth token, redirecting to login...');
         showMessage('Please login to view your profile', 'warning');
-        setTimeout(() => window.location.href = 'index.html', 2000);
+        setTimeout(() => window.location.href = '/frontend/html/index.html', 2000);
         return;
     }
     
@@ -133,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // If authentication fails, redirect to login
         if (error.message.includes('Authentication failed')) {
-            setTimeout(() => window.location.href = 'index.html', 2000);
+            setTimeout(() => window.location.href = '/frontend/html/index.html', 2000);
         }
     }
 });
@@ -152,6 +154,7 @@ async function loadProfileData() {
             
             // Update DOM elements
             updateProfileDisplay();
+            updateEditProfileForm();
         } else {
             throw new Error('No profile data received');
         }
@@ -214,10 +217,9 @@ function updateEditProfileForm() {
     const editUsername = document.getElementById('editUsername');
     const editEmail = document.getElementById('editEmail');
     const editPhone = document.getElementById('editPhone');
-    
-    if (editUsername) editUsername.value = currentUser.username || '';
-    if (editEmail) editEmail.value = currentUser.email || '';
-    if (editPhone) editPhone.value = currentUser.phone || '';
+    if (editUsername) editUsername.placeholder = currentUser.username || '';
+    if (editEmail) editEmail.placeholder = currentUser.email || '';
+    if (editPhone) editPhone.placeholder = currentUser.phone || '';
 }
 
 async function loadUserOrders() {
@@ -285,8 +287,15 @@ function displayUserOrders() {
 async function loadUserReviews() {
     try {
         console.log('Loading user reviews...');
-        const reviewsData = await apiCall('/reviews/get_all_reviews/');
-        userReviews = (reviewsData.general || []).filter(review => review.user_id === currentUser.id);
+        const reviewsData = await apiCall('/profile/me/my_reviews/');
+        userReviewsByType = reviewsData || {};
+        // Flatten all reviews from the returned object
+        userReviews = [];
+        if (userReviewsByType && typeof userReviewsByType === 'object') {
+            Object.values(userReviewsByType).forEach(arr => {
+                if (Array.isArray(arr)) userReviews = userReviews.concat(arr);
+            });
+        }
         console.log('Reviews loaded:', userReviews);
         displayUserReviews();
         updateProfileStats();
@@ -302,13 +311,23 @@ function displayUserReviews() {
         console.error('profileReviewsList element not found');
         return;
     }
-    
-    if (userReviews.length === 0) {
+    let reviewsToDisplay = [];
+    if (currentReviewTypeFilter === 'all') {
+        reviewsToDisplay = userReviews;
+    } else if (userReviewsByType && typeof userReviewsByType === 'object') {
+        if (currentReviewTypeFilter === 'general') {
+            reviewsToDisplay = userReviewsByType['general'] || [];
+        } else if (currentReviewTypeFilter === 'item_review') {
+            reviewsToDisplay = userReviewsByType['item_review'] || [];
+        } else if (currentReviewTypeFilter === 'order_review') {
+            reviewsToDisplay = userReviewsByType['order_review'] || [];
+        }
+    }
+    if (!reviewsToDisplay || reviewsToDisplay.length === 0) {
         reviewsList.innerHTML = '<p class="no-data">No reviews found.</p>';
         return;
     }
-    
-    reviewsList.innerHTML = userReviews.map(review => `
+    reviewsList.innerHTML = reviewsToDisplay.map(review => `
         <div class="review-card">
             <div class="review-header">
                 <div class="review-rating">
@@ -376,26 +395,35 @@ function initializeProfilePage() {
     if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', handleChangePassword);
     }
+
+    // Add event listeners for review type filter radios
+    const reviewTypeRadios = document.getElementsByName('reviewTypeFilter');
+    reviewTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            currentReviewTypeFilter = this.value;
+            displayUserReviews();
+        });
+    });
 }
 
 async function handleEditProfile(e) {
     e.preventDefault();
-    
-    const formData = new FormData(e.target);
+    const editUsername = document.getElementById('editUsername');
+    const editEmail = document.getElementById('editEmail');
+    const editPhone = document.getElementById('editPhone');
     const updateData = {
-        username: document.getElementById('editUsername').value,
-        email: document.getElementById('editEmail').value,
-        phone: document.getElementById('editPhone').value
+        username: editUsername.value || currentUser.username,
+        email: editEmail.value || currentUser.email,
+        phone: editPhone.value || currentUser.phone
     };
-    
     try {
         const updatedUser = await apiCall('/profile/me/modify/', {
             method: 'PUT',
             body: JSON.stringify(updateData)
         });
-        
         currentUser = updatedUser;
         updateProfileDisplay();
+        updateEditProfileForm();
         showMessage('Profile updated successfully!', 'success');
     } catch (error) {
         console.error('Failed to update profile:', error);
@@ -448,6 +476,11 @@ function switchSection(sectionId) {
     
     if (targetSection) targetSection.classList.add('active');
     if (targetLink) targetLink.classList.add('active');
+    
+    // If switching to edit-profile, update placeholders
+    if (sectionId === 'edit-profile') {
+        updateEditProfileForm();
+    }
 }
 
 function formatStatus(status) {
@@ -471,50 +504,145 @@ function logout() {
     currentUser = null;
     showMessage('Logged out successfully', 'success');
     setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 1000);
+        window.location.href = '/html/index.html';
+    }, 500);
 }
 
-
-
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('Profile page loaded');
-    
-    // Check if user is logged in
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-        showMessage('Please login to view your profile', 'warning');
-        setTimeout(() => window.location.href = 'index.html', 2000);
-        return;
+// === Add Review Form Logic ===
+document.addEventListener('DOMContentLoaded', function() {
+    // Review type change handler
+    const reviewTypeSelect = document.getElementById('reviewType');
+    if (reviewTypeSelect) {
+        reviewTypeSelect.addEventListener('change', handleReviewTypeChange);
     }
-    
-    try {
-        // First get current user
-        currentUser = await apiCall('/auth/current_user/');
-        console.log('Current user:', currentUser);
-        
-        if (!currentUser || !currentUser.id) {
-            throw new Error('Invalid user data received');
-        }
-        
-        // Then load profile data
-        await loadProfileData();
-        
-        // Load other data
-        await loadUserOrders();
-        await loadUserReviews();
-        
-        // Initialize page components
-        initializeProfilePage();
-        
-    } catch (error) {
-        console.error('Initialization error:', error);
-        showMessage('Failed to load profile: ' + error.message, 'error');
-        setTimeout(() => window.location.href = 'index.html', 3000);
+
+    // Add review form submission
+    const addReviewForm = document.getElementById('addReviewForm');
+    if (addReviewForm) {
+        addReviewForm.addEventListener('submit', handleAddReviewSubmit);
     }
 });
 
+function handleReviewTypeChange() {
+    const reviewType = document.getElementById('reviewType').value;
+    const orderSelectGroup = document.getElementById('orderSelectGroup');
+    const itemSelectGroup = document.getElementById('itemSelectGroup');
 
+    // Hide both by default
+    orderSelectGroup.style.display = 'none';
+    itemSelectGroup.style.display = 'none';
+
+    if (reviewType === 'order_review') {
+        orderSelectGroup.style.display = 'block';
+        populateOrderSelect();
+    } else if (reviewType === 'item_review') {
+        itemSelectGroup.style.display = 'block';
+        populateItemSelect();
+    }
+}
+
+async function populateOrderSelect() {
+    const orderSelect = document.getElementById('orderSelect');
+    orderSelect.innerHTML = '<option value="">Choose an order...</option>';
+    // Flatten all user orders
+    let allOrders = [];
+    if (userOrders && typeof userOrders === 'object') {
+        Object.values(userOrders).forEach(statusOrders => {
+            if (Array.isArray(statusOrders)) {
+                allOrders = allOrders.concat(statusOrders);
+            }
+        });
+    } else if (Array.isArray(userOrders)) {
+        allOrders = userOrders;
+    }
+    // Only include delivered orders
+    const deliveredOrders = allOrders.filter(order => order.status && order.status.toLowerCase() === 'delivered');
+    deliveredOrders.forEach(order => {
+        const option = document.createElement('option');
+        option.value = order.id;
+        option.textContent = `Order #${order.id} - ${formatDate(order.ordered_at)}`;
+        orderSelect.appendChild(option);
+    });
+}
+
+async function populateItemSelect() {
+    const itemSelect = document.getElementById('itemSelect');
+    itemSelect.innerHTML = '<option value="">Choose an item...</option>';
+    try {
+        const categories = await apiCall('/category/all/');
+        for (const category of categories) {
+            const items = await apiCall(`/category/${category.id}/all_items/`);
+            if (items && items.length > 0) {
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `${item.name} (${category.name})`;
+                    itemSelect.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        showMessage('Failed to load items for review', 'error');
+    }
+}
+
+async function handleAddReviewSubmit(e) {
+    e.preventDefault();
+    if (!currentUser) {
+        showMessage('Please login to submit a review', 'warning');
+        return;
+    }
+    const reviewType = document.getElementById('reviewType').value;
+    const ratingInput = document.querySelector('input[name="rating"]:checked');
+    const content = document.getElementById('reviewContent').value;
+    if (!ratingInput) {
+        showMessage('Please select a rating', 'warning');
+        return;
+    }
+    let endpoint = '';
+    let reviewData = {
+        content: content,
+        rating: parseInt(ratingInput.value)
+    };
+    if (reviewType === 'general') {
+        endpoint = '/reviews/add_general_review/';
+    } else if (reviewType === 'order_review') {
+        const orderId = document.getElementById('orderSelect').value;
+        if (!orderId) {
+            showMessage('Please select an order', 'warning');
+            return;
+        }
+        endpoint = `/reviews/add_order_review/${orderId}/`;
+    } else if (reviewType === 'item_review') {
+        const itemId = document.getElementById('itemSelect').value;
+        if (!itemId) {
+            showMessage('Please select an item', 'warning');
+            return;
+        }
+        endpoint = `/reviews/add_item_review/${itemId}/`;
+    } else {
+        showMessage('Please select a review type', 'warning');
+        return;
+    }
+    try {
+        await apiCall(endpoint, {
+            method: 'POST',
+            body: JSON.stringify(reviewData)
+        });
+        showMessage('Review submitted successfully!');
+        // Reset form
+        e.target.reset();
+        document.getElementById('charCount').textContent = '0';
+        document.getElementById('orderSelectGroup').style.display = 'none';
+        document.getElementById('itemSelectGroup').style.display = 'none';
+        // Reload reviews
+        await loadUserReviews();
+        // Optionally switch to the My Reviews section
+        switchSection('my-reviews');
+    } catch (error) {
+        showMessage('Failed to submit review', 'error');
+    }
+}
 
 // Temporary test function - call this first
 async function testApiConnection() {

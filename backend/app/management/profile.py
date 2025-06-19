@@ -7,8 +7,9 @@ from app.dependencies import sessionDep
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 from app.models.users import User
-
+from app.models.reviews import Review   
 from typing import Annotated
+from app.models.reviews import review_type
 
 
 profile_router = routing.APIRouter(
@@ -27,11 +28,30 @@ def modify_profile(user: UserUpdate,token: Annotated[str,Depends(oauth2_scheme)]
     user_db = current_user(token,db)
     user_data = user.model_dump()
     for key,value in user_data.items():
+        print(key,value)
         setattr(user_db,key,value)
     db.commit()
     db.refresh(user_db)
     return user_db
     
+
+
+
+@profile_router.get('/all_users/',response_model=list[UserDisplay])
+def get_all_users(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    user = current_user(token,db)
+    if not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="You are not authorized to view this page")
+    users = db.query(User).all()
+    return users
+
+
+
+
+@profile_router.get('/is_admin/')
+def is_admin(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    user = current_user(token,db)
+    return user.is_admin
    
     
 
@@ -51,6 +71,21 @@ def view_my_items(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
         orders_by_status[order.status].append(order)
     return orders_by_status
 
+
+#an end point to view all the reviews of the user
+@profile_router.get('/me/my_reviews/')
+def view_my_reviews(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    user = current_user(token,db)
+    reviews = db.query(Review).filter(Review.user_id == user.id).all()
+    #split them by type (general, item, order)
+    reviews_by_type = {
+        review_type.GENERAL : [],
+        review_type.ITEM : [],
+        review_type.ORDER : []
+    }
+    for review in reviews:
+        reviews_by_type[review.type].append(review)
+    return reviews_by_type
 
 class PasswordChange(BaseModel):
     old_password: str

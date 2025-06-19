@@ -1,0 +1,57 @@
+@import url('styles.css');
+@import url('profile.css');
+
+/* Admin dashboard specific styles */
+
+.profile-container {
+    display: flex;
+    min-height: 100vh;
+    background: #fff;
+}
+
+.profile-sidebar {
+    width: 260px;
+    min-width: 220px;
+    background: #fff;
+    color: #222;
+    border-right: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh;
+    position: relative;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+}
+
+.profile-content {
+    flex: 1;
+    background: #fff;
+    min-height: 100vh;
+    padding: 40px 32px 32px 32px;
+    overflow-x: auto;
+}
+
+.section-header {
+    margin-top: 0;
+    margin-bottom: 2em;
+}
+
+.sidebar-header, .sidebar-footer {
+    background: #fff;
+}
+
+.sidebar-link, .sidebar-link.active, .sidebar-link:hover {
+    color: #2563eb;
+    background: none;
+}
+
+.sidebar-link.active {
+    font-weight: 600;
+    border-left: 4px solid #2563eb;
+    background: #f3f6fa;
+}
+
+/* Remove blue gradient background from body for admin */
+body.admin-dashboard-page {
+    background: #fff !important;
+} 

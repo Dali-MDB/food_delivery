@@ -127,6 +127,7 @@ function logout() {
     localStorage.removeItem('authToken');
     updateAuthUI();
     updateCartUI();
+    window.location.href = '../html/index.html';
 }
 
 function updateAuthUI() {
@@ -561,6 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await login(email, password);
             closeModal(elements.loginModal);
             showMessage('Login successful!');
+            checkAdminStatusAndShowIcon();
         } catch (error) {
             showMessage(error.message, 'error');
         }
@@ -663,6 +665,32 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('categories').scrollIntoView({ behavior: 'smooth' });
         });
     }
+
+    // Ensure all navbar logout buttons (class 'logoutBtn') trigger logout
+    var navbarLogoutBtns = document.querySelectorAll('.logoutBtn');
+    navbarLogoutBtns.forEach(function(btn) {
+        btn.addEventListener('click', logout);
+    });
+    // Ensure profile sidebar logout button triggers logout
+    var sidebarLogoutBtn = document.getElementById('logoutBtnSidebar');
+    if (sidebarLogoutBtn) {
+        sidebarLogoutBtn.addEventListener('click', logout);
+    }
+
+    // Show admin icon in navbar only if user is admin
+    try {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        var adminBtn = document.getElementById('adminBtn');
+        if (adminBtn) {
+            if (user && user.is_admin) {
+                adminBtn.style.display = 'inline-block';
+            } else {
+                adminBtn.style.display = 'none';
+            }
+        }
+    } catch {}
+
+    checkAdminStatusAndShowIcon();
 });
 
 // Keyboard shortcuts
@@ -676,4 +704,33 @@ document.addEventListener('keydown', (e) => {
 window.loadCategoryItems = loadCategoryItems;
 window.changeQuantity = changeQuantity;
 window.addToCart = addToCart;
-window.removeFromCart = removeFromCart; 
+window.removeFromCart = removeFromCart;
+
+async function checkAdminStatusAndShowIcon() {
+    const authToken = localStorage.getItem('authToken');
+    const adminBtn = document.getElementById('adminBtn');
+    if (!adminBtn) return;
+    if (!authToken) {
+        adminBtn.style.display = 'none';
+        return;
+    }
+    try {
+        const response = await fetch('http://localhost:8000/profile/is_admin/', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        if (response.status === 401) {
+            adminBtn.style.display = 'none';
+            return;
+        }
+        const isAdmin = await response.json();
+        if (isAdmin === true) {
+            adminBtn.style.display = 'inline-block';
+        } else {
+            adminBtn.style.display = 'none';
+        }
+    } catch {
+        adminBtn.style.display = 'none';
+    }
+} 

@@ -31,7 +31,6 @@ class User(UserBase):
 
 
 class UserUpdate(UserBase):
-    username : str | None = Field(max_length=30)
-    phone : str | None = Field(max_length=15)
-    email : EmailStr | None = Field(max_length=50)
-    password : str | None
+    username : str | None = None 
+    phone : str | None = None
+    email : EmailStr | None = None

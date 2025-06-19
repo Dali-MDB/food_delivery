@@ -45,7 +45,7 @@ class Order(Base):
     __tablename__ = 'orders'
 
     id = Column(Integer, index=True, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), index=True, nullable=True)
     address = Column(Text, nullable=True)  # Only required when order is confirmed
     ordered_at = Column(DateTime, nullable=True)  # Set when order is confirmed
     status = Column(Enum(order_status), default=order_status.PENDING)
