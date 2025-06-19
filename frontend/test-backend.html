@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Test - FoodExpress</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container" style="padding-top: 100px;">
+        <h1>Backend Connection Test</h1>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="testBackendConnection()" class="btn btn-primary">Test Backend Connection</button>
+            <button onclick="testCategories()" class="btn btn-primary">Test Categories API</button>
+            <button onclick="testCategory1()" class="btn btn-primary">Test Category 1</button>
+            <button onclick="clearTestLog()" class="btn btn-outline">Clear Log</button>
+        </div>
+        
+        <div id="testResults" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 8px; max-height: 400px; overflow-y: auto;">
+            <h3>Test Results:</h3>
+            <div id="testLog"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        function log(message) {
+            const testLog = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            testLog.innerHTML += `<p>[${timestamp}] ${message}</p>`;
+            testLog.scrollTop = testLog.scrollHeight;
+        }
+
+        function clearTestLog() {
+            document.getElementById('testLog').innerHTML = '';
+        }
+
+        async function testBackendConnection() {
+            log('Testing backend connection...');
+            log(`API_BASE_URL: ${API_BASE_URL}`);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`SUCCESS: Backend is running - ${JSON.stringify(data)}`);
+                } else {
+                    log(`ERROR: Backend responded with status ${response.status}`);
+                }
+            } catch (error) {
+                log(`ERROR: Cannot connect to backend - ${error.message}`);
+            }
+        }
+
+        async function testCategories() {
+            log('Testing categories API...');
+            
+            try {
+                const categories = await apiCall('/category/all/');
+                log(`SUCCESS: Found ${categories.length} categories`);
+                categories.forEach(cat => {
+                    log(`  - Category ${cat.id}: ${cat.name}`);
+                });
+            } catch (error) {
+                log(`ERROR: Failed to load categories - ${error.message}`);
+            }
+        }
+
+        async function testCategory1() {
+            log('Testing category 1 API...');
+            
+            try {
+                const category = await apiCall('/category/1/view/');
+                log(`SUCCESS: Category 1 loaded - ${category.name}`);
+                
+                const items = await apiCall('/category/1/all_items/');
+                log(`SUCCESS: Found ${items.length} items in category 1`);
+                items.forEach(item => {
+                    log(`  - Item ${item.id}: ${item.name} - $${item.price}`);
+                });
+            } catch (error) {
+                log(`ERROR: Failed to load category 1 - ${error.message}`);
+            }
+        }
+
+        // Log when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Test page loaded');
+            log(`API_BASE_URL: ${API_BASE_URL}`);
+            log(`apiCall function: ${typeof apiCall !== 'undefined' ? 'available' : 'undefined'}`);
+        });
+    </script>
+</body>
+</html> 

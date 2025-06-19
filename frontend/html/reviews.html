@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews - FoodExpress</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-utensils"></i>
+                <span>FoodExpress</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="categories.html" class="nav-link">Menu</a>
+                <a href="orders.html" class="nav-link">Orders</a>
+                <a href="reviews.html" class="nav-link active">Reviews</a>
+            </div>
+            <div class="nav-auth">
+                <button id="loginBtn" class="btn btn-outline">Login</button>
+                <button id="signupBtn" class="btn btn-primary">Sign Up</button>
+                <button id="logoutBtn" class="btn btn-outline" style="display: none;">Logout</button>
+                <a href="profile.html" id="profileBtn" class="btn btn-primary" style="display: none; text-decoration: none;">Profile</a>
+            </div>
+            <div class="nav-cart">
+                <a href="cart.html" id="cartBtn" class="btn btn-cart" style="display: none; text-decoration: none;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cartCount">0</span>
+                </a>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Customer Reviews</h1>
+            <p>See what our customers are saying about us</p>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section class="reviews-page">
+        <div class="container">
+            <!-- Reviews Stats -->
+            <div class="reviews-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalReviews">0</div>
+                    <div class="stat-label">Total Reviews</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgRating">0.0</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="fiveStarReviews">0</div>
+                    <div class="stat-label">5-Star Reviews</div>
+                </div>
+            </div>
+
+            <!-- Review Filters -->
+            <div class="review-filters">
+                <button class="filter-btn active" data-filter="all">All Reviews</button>
+                <button class="filter-btn" data-filter="5">5 Stars</button>
+                <button class="filter-btn" data-filter="4">4 Stars</button>
+                <button class="filter-btn" data-filter="3">3 Stars</button>
+                <button class="filter-btn" data-filter="2">2 Stars</button>
+                <button class="filter-btn" data-filter="1">1 Star</button>
+            </div>
+
+            <!-- Write Review Button -->
+            <div class="write-review-section">
+                <button id="writeReviewBtn" class="btn btn-primary">
+                    <i class="fas fa-pen"></i> Write a Review
+                </button>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="reviews-list" id="reviewsList">
+                <!-- Reviews will be loaded here -->
+            </div>
+
+            <!-- Load More Button -->
+            <div class="load-more-section">
+                <button id="loadMoreBtn" class="btn btn-outline">Load More Reviews</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Write Review Modal -->
+    <div id="writeReviewModal" class="modal">
+        <div class="modal-content review-modal">
+            <div class="modal-header">
+                <h2>Write a Review</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="writeReviewForm" class="review-form">
+                    <div class="form-group">
+                        <label for="reviewType">Review Type</label>
+                        <select id="reviewType" required>
+                            <option value="general">General Review</option>
+                            <option value="order_review">Order Review</option>
+                            <option value="item_review">Item Review</option>
+                        </select>
+                    </div>
+                    
+                    <div id="orderSelectGroup" class="form-group" style="display: none;">
+                        <label for="orderSelect">Select Order</label>
+                        <select id="orderSelect">
+                            <option value="">Choose an order...</option>
+                        </select>
+                    </div>
+                    
+                    <div id="itemSelectGroup" class="form-group" style="display: none;">
+                        <label for="itemSelect">Select Item</label>
+                        <select id="itemSelect">
+                            <option value="">Choose an item...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reviewRating">Rating</label>
+                        <div class="rating-input">
+                            <input type="radio" name="rating" value="5" id="star5" required>
+                            <label for="star5"><i class="fas fa-star"></i></label>
+                            <input type="radio" name="rating" value="4" id="star4">
+                            <label for="star4"><i class="fas fa-star"></i></label>
+                            <input type="radio" name="rating" value="3" id="star3">
+                            <label for="star3"><i class="fas fa-star"></i></label>
+                            <input type="radio" name="rating" value="2" id="star2">
+                            <label for="star2"><i class="fas fa-star"></i></label>
+                            <input type="radio" name="rating" value="1" id="star1">
+                            <label for="star1"><i class="fas fa-star"></i></label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reviewContent">Your Review</label>
+                        <textarea id="reviewContent" required placeholder="Share your experience with us..." maxlength="1000"></textarea>
+                        <div class="char-count">
+                            <span id="charCount">0</span>/1000 characters
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">Submit Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h2>Login</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Login</button>
+                </form>
+                <p class="auth-switch">Don't have an account? <a href="#" id="switchToSignup">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h2>Sign Up</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="signupForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="signupUsername">Username</label>
+                        <input type="text" id="signupUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPhone">Phone</label>
+                        <input type="tel" id="signupPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Sign Up</button>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/reviews.js"></script>
+</body>
+</html> 

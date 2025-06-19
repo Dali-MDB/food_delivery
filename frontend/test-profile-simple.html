@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Profile Test Page</h1>
+    
+    <div class="test-section">
+        <h3>Authentication Status</h3>
+        <div id="authStatus" class="result">Checking...</div>
+        <button onclick="checkAuth()">Check Auth</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Profile Data</h3>
+        <div id="profileData" class="result">Click button to load</div>
+        <button onclick="loadProfile()">Load Profile</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>User Orders</h3>
+        <div id="userOrders" class="result">Click button to load</div>
+        <button onclick="loadOrders()">Load Orders</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>User Reviews</h3>
+        <div id="userReviews" class="result">Click button to load</div>
+        <button onclick="loadReviews()">Load Reviews</button>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        
+        async function apiCall(endpoint, options = {}) {
+            const authToken = localStorage.getItem('authToken');
+            
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                }
+            };
+
+            const config = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...options.headers
+                }
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('API call failed:', error);
+                throw error;
+            }
+        }
+        
+        async function checkAuth() {
+            const authToken = localStorage.getItem('authToken');
+            const statusDiv = document.getElementById('authStatus');
+            
+            if (!authToken) {
+                statusDiv.innerHTML = '<strong>Not logged in</strong> - No auth token found';
+                return;
+            }
+            
+            try {
+                const user = await apiCall('/auth/current_user/');
+                statusDiv.innerHTML = `<strong>Logged in as:</strong> ${user.username} (${user.email})`;
+            } catch (error) {
+                statusDiv.innerHTML = `<strong>Auth Error:</strong> ${error.message}`;
+            }
+        }
+        
+        async function loadProfile() {
+            const dataDiv = document.getElementById('profileData');
+            dataDiv.innerHTML = 'Loading...';
+            
+            try {
+                const profile = await apiCall('/profile/me/view/');
+                dataDiv.innerHTML = `<pre>${JSON.stringify(profile, null, 2)}</pre>`;
+            } catch (error) {
+                dataDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+        
+        async function loadOrders() {
+            const dataDiv = document.getElementById('userOrders');
+            dataDiv.innerHTML = 'Loading...';
+            
+            try {
+                const orders = await apiCall('/profile/me/my_orders/');
+                dataDiv.innerHTML = `<pre>${JSON.stringify(orders, null, 2)}</pre>`;
+            } catch (error) {
+                dataDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+        
+        async function loadReviews() {
+            const dataDiv = document.getElementById('userReviews');
+            dataDiv.innerHTML = 'Loading...';
+            
+            try {
+                const reviews = await apiCall('/reviews/get_all_reviews/');
+                dataDiv.innerHTML = `<pre>${JSON.stringify(reviews, null, 2)}</pre>`;
+            } catch (error) {
+                dataDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+        
+        // Auto-check auth on page load
+        document.addEventListener('DOMContentLoaded', checkAuth);
+    </script>
+</body>
+</html> 

@@ -76,9 +76,10 @@ def delete_category(category_id:int,db:sessionDep,token:Annotated[str,Depends(oa
 
 
 
-@category_router.get('/{catgory_id}/all_items/',response_model=list[ItemDisplay])
+@category_router.get('/{category_id}/all_items/',response_model=list[ItemDisplay])
 def get_items_of_category(category_id:int,db:sessionDep):
     category = fetch_category(category_id,db)
+    print("heerr")
     items = db.query(Item).filter(Item.category_id == category_id).all()
     return items
 

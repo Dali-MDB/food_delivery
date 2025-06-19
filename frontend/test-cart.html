@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Cart Test Page</h1>
+        
+        <div class="test-section">
+            <h2>Authentication Status</h2>
+            <div id="authStatus">Loading...</div>
+            <button onclick="checkAuth()">Check Auth</button>
+            <button onclick="testCart()">Test Cart</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>Cart Count</h2>
+            <div id="cartCountDisplay">0</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Cart Items</h2>
+            <div id="cartItemsDisplay">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Console Log</h2>
+            <div id="consoleLog" style="background: #f5f5f5; padding: 10px; height: 200px; overflow-y: scroll; font-family: monospace;"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Override console.log to display in the page
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function addToLog(message, type = 'log') {
+            const logDiv = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : 'black';
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog(args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog(args.join(' '), 'error');
+        };
+        
+        async function checkAuth() {
+            console.log('Checking authentication...');
+            const authToken = localStorage.getItem('authToken');
+            console.log('Auth token:', authToken ? 'Present' : 'Not present');
+            
+            if (authToken) {
+                try {
+                    const user = await apiCall('/auth/current_user/');
+                    console.log('Current user:', user);
+                    document.getElementById('authStatus').innerHTML = `
+                        <strong>Authenticated:</strong> ${user.username} (${user.email})
+                    `;
+                } catch (error) {
+                    console.error('Auth error:', error);
+                    document.getElementById('authStatus').innerHTML = `
+                        <strong>Auth Error:</strong> ${error.message}
+                    `;
+                }
+            } else {
+                document.getElementById('authStatus').innerHTML = '<strong>Not authenticated</strong>';
+            }
+        }
+        
+        async function testCart() {
+            console.log('Testing cart...');
+            try {
+                const cartData = await apiCall('/orders/view_cart/');
+                console.log('Cart data:', cartData);
+                
+                const cart = cartData.item_orders || [];
+                document.getElementById('cartCountDisplay').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+                
+                if (cart.length === 0) {
+                    document.getElementById('cartItemsDisplay').innerHTML = '<p>Cart is empty</p>';
+                } else {
+                    document.getElementById('cartItemsDisplay').innerHTML = cart.map(item => `
+                        <div style="border: 1px solid #ccc; padding: 10px; margin: 5px 0;">
+                            <strong>${item.item_name}</strong> - Qty: ${item.quantity} - ${formatPrice(item.total_price)}
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Cart test error:', error);
+                document.getElementById('cartItemsDisplay').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Cart test page loaded');
+            setTimeout(() => {
+                checkAuth();
+                testCart();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

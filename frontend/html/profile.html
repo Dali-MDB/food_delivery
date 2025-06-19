@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - FoodExpress</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-utensils"></i>
+                <span>FoodExpress</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="categories.html" class="nav-link">Menu</a>
+                <a href="orders.html" class="nav-link">Orders</a>
+                <a href="reviews.html" class="nav-link">Reviews</a>
+            </div>
+            <div class="nav-auth">
+                <button id="loginBtn" class="btn btn-outline">Login</button>
+                <button id="signupBtn" class="btn btn-primary">Sign Up</button>
+                <button id="logoutBtn" class="btn btn-outline" style="display: none;">Logout</button>
+                <button id="profileBtn" class="btn btn-primary" style="display: none;">Profile</button>
+            </div>
+            <div class="nav-cart">
+                <a href="cart.html" id="cartBtn" class="btn btn-cart" style="display: none; text-decoration: none;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cartCount">0</span>
+                </a>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Section -->
+    <section class="profile-page">
+        <div class="profile-container">
+            <!-- Sidebar -->
+            <div class="profile-sidebar">
+                <div class="sidebar-header">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <!-- here man it shows this static data, you are not fetching it from the backend-->
+                        <h3 id="sidebarUsername">Loading...</h3>
+                        <p id="sidebarEmail">loading@email.com</p>
+                    </div>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <a href="#profile" class="sidebar-link active" data-section="profile">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="#edit-profile" class="sidebar-link" data-section="edit-profile">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit Profile</span>
+                    </a>
+                    <a href="#change-password" class="sidebar-link" data-section="change-password">
+                        <i class="fas fa-lock"></i>
+                        <span>Change Password</span>
+                    </a>
+                    <a href="#my-orders" class="sidebar-link" data-section="my-orders">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span>My Orders</span>
+                    </a>
+                    <a href="#my-reviews" class="sidebar-link" data-section="my-reviews">
+                        <i class="fas fa-star"></i>
+                        <span>My Reviews</span>
+                    </a>
+                    <a href="#add-review" class="sidebar-link" data-section="add-review">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Review</span>
+                    </a>
+                    <a href="#settings" class="sidebar-link" data-section="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+                
+                <div class="sidebar-footer">
+                    <button id="logoutBtnSidebar" class="btn btn-danger btn-full">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="profile-content">
+                <!-- Profile Section -->
+                <div id="profile" class="content-section active">
+                    <div class="section-header">
+                        <h2>Profile</h2>
+                        <p>View and manage your account information</p>
+                    </div>
+                    
+                    <div class="profile-card">
+                        <div class="profile-avatar-large">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-details">
+                            <h3 id="profileUsername">Loading...</h3>
+                            <p id="profileEmail">loading@email.com</p>
+                            <p id="profilePhone">Loading phone...</p>
+                            <p id="profileJoinDate">Member since: Loading...</p>
+                        </div>
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalOrders">0</span>
+                                <span class="stat-label">Total Orders</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalReviews">0</span>
+                                <span class="stat-label">Reviews</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="memberSince">0</span>
+                                <span class="stat-label">Days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Profile Section -->
+                <div id="edit-profile" class="content-section">
+                    <div class="section-header">
+                        <h2>Edit Profile</h2>
+                        <p>Update your personal information</p>
+                    </div>
+                    
+                    <div class="form-card">
+                        <form id="editProfileForm">
+                            <div class="form-group">
+                                <label for="editUsername">Username</label>
+                                <input type="text" id="editUsername" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editEmail">Email</label>
+                                <input type="email" id="editEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editPhone">Phone</label>
+                                <input type="tel" id="editPhone" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Change Password Section -->
+                <div id="change-password" class="content-section">
+                    <div class="section-header">
+                        <h2>Change Password</h2>
+                        <p>Update your account password</p>
+                    </div>
+                    
+                    <div class="form-card">
+                        <form id="changePasswordForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- My Orders Section -->
+                <div id="my-orders" class="content-section">
+                    <div class="section-header">
+                        <h2>My Orders</h2>
+                        <p>View your order history</p>
+                    </div>
+                    
+                    <div class="orders-list" id="profileOrdersList">
+                        <!-- Orders will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- My Reviews Section -->
+                <div id="my-reviews" class="content-section">
+                    <div class="section-header">
+                        <h2>My Reviews</h2>
+                        <p>View and manage your reviews</p>
+                    </div>
+                    
+                    <div class="reviews-list" id="profileReviewsList">
+                        <!-- Reviews will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Add Review Section -->
+                <div id="add-review" class="content-section">
+                    <div class="section-header">
+                        <h2>Add Review</h2>
+                        <p>Share your experience with us</p>
+                    </div>
+                    
+                    <div class="form-card">
+                        <form id="addReviewForm">
+                            <div class="form-group">
+                                <label for="reviewType">Review Type</label>
+                                <select id="reviewType" required>
+                                    <option value="">Select review type...</option>
+                                    <option value="general">General Review</option>
+                                    <option value="item_review">Item Review</option>
+                                    <option value="order_review">Order Review</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" id="itemSelectGroup" style="display: none;">
+                                <label for="itemSelect">Select Item</label>
+                                <select id="itemSelect">
+                                    <option value="">Choose an item...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" id="orderSelectGroup" style="display: none;">
+                                <label for="orderSelect">Select Order</label>
+                                <select id="orderSelect">
+                                    <option value="">Choose an order...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="reviewRating">Rating</label>
+                                <div class="rating-input">
+                                    <input type="radio" name="rating" value="1" id="star1">
+                                    <label for="star1">★</label>
+                                    <input type="radio" name="rating" value="2" id="star2">
+                                    <label for="star2">★</label>
+                                    <input type="radio" name="rating" value="3" id="star3">
+                                    <label for="star3">★</label>
+                                    <input type="radio" name="rating" value="4" id="star4">
+                                    <label for="star4">★</label>
+                                    <input type="radio" name="rating" value="5" id="star5">
+                                    <label for="star5">★</label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="reviewContent">Review Content</label>
+                                <textarea id="reviewContent" rows="4" required placeholder="Share your experience..."></textarea>
+                                <div class="char-count">
+                                    <span id="charCount">0</span>/500 characters
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Submit Review</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings" class="content-section">
+                    <div class="section-header">
+                        <h2>Settings</h2>
+                        <p>Manage your account preferences</p>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Email Notifications</h4>
+                                <p>Receive email updates about your orders</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="emailNotifications" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Order Updates</h4>
+                                <p>Get notified when your order status changes</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="orderUpdates" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Promotional Emails</h4>
+                                <p>Receive special offers and promotions</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="promotionalEmails">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h2>Login</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Login</button>
+                </form>
+                <p class="auth-switch">Don't have an account? <a href="#" id="switchToSignup">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h2>Sign Up</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="signupForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="signupUsername">Username</label>
+                        <input type="text" id="signupUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPhone">Phone</label>
+                        <input type="tel" id="signupPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Sign Up</button>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/profile.js"></script>
+</body>
+</html> 

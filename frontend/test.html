@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Navigation - FoodExpress</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container" style="padding-top: 100px;">
+        <h1>Test Category Navigation</h1>
+        <p>Click the buttons below to test navigation to category pages:</p>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="testCategory(1)" class="btn btn-primary">Test Category 1</button>
+            <button onclick="testCategory(2)" class="btn btn-primary">Test Category 2</button>
+            <button onclick="testCategory(3)" class="btn btn-primary">Test Category 3</button>
+        </div>
+        
+        <div id="testResults" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+            <h3>Test Results:</h3>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        function testCategory(categoryId) {
+            const results = document.getElementById('results');
+            results.innerHTML += `<p>Testing navigation to category ${categoryId}...</p>`;
+            
+            // Test the navigation
+            const url = `html/category.html?id=${categoryId}`;
+            results.innerHTML += `<p>URL: ${url}</p>`;
+            
+            // Simulate navigation
+            setTimeout(() => {
+                window.location.href = url;
+            }, 1000);
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Profile Test Page</h1>
+        
+        <div class="test-section">
+            <h2>Authentication Status</h2>
+            <div id="authStatus">Loading...</div>
+            <button onclick="checkAuth()">Check Auth</button>
+            <button onclick="testProfile()">Test Profile</button>
+            <button onclick="testOrders()">Test Orders</button>
+            <button onclick="testReviews()">Test Reviews</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>User Data</h2>
+            <div id="userData">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Orders Data</h2>
+            <div id="ordersData">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Reviews Data</h2>
+            <div id="reviewsData">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Profile Data Test</h3>
+            <button onclick="testProfileData()">Test Profile Data</button>
+            <div id="profileDataResult" class="result-box"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>User Orders Test</h3>
+            <button onclick="testUserOrders()">Test User Orders</button>
+            <div id="userOrdersResult" class="result-box"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>User Reviews Test</h3>
+            <button onclick="testUserReviews()">Test User Reviews</button>
+            <div id="userReviewsResult" class="result-box"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Profile Initialization Test</h3>
+            <button onclick="testProfileInitialization()">Test Profile Initialization</button>
+            <div id="profileInitResult" class="result-box"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Console Log</h2>
+            <div id="consoleLog" style="background: #f5f5f5; padding: 10px; height: 200px; overflow-y: scroll; font-family: monospace;"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Override console.log to display in the page
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function addToLog(message, type = 'log') {
+            const logDiv = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : 'black';
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog(args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog(args.join(' '), 'error');
+        };
+        
+        async function checkAuth() {
+            console.log('Checking authentication...');
+            const authToken = localStorage.getItem('authToken');
+            console.log('Auth token:', authToken ? 'Present' : 'Not present');
+            
+            if (authToken) {
+                try {
+                    const user = await apiCall('/auth/current_user/');
+                    console.log('Current user:', user);
+                    document.getElementById('authStatus').innerHTML = `
+                        <strong>Authenticated:</strong> ${user.username} (${user.email})
+                    `;
+                    document.getElementById('userData').innerHTML = `
+                        <pre>${JSON.stringify(user, null, 2)}</pre>
+                    `;
+                } catch (error) {
+                    console.error('Auth error:', error);
+                    document.getElementById('authStatus').innerHTML = `
+                        <strong>Auth Error:</strong> ${error.message}
+                    `;
+                }
+            } else {
+                document.getElementById('authStatus').innerHTML = '<strong>Not authenticated</strong>';
+            }
+        }
+        
+        async function testProfile() {
+            console.log('Testing profile functionality...');
+            const authToken = localStorage.getItem('authToken');
+            
+            if (!authToken) {
+                console.log('No auth token, cannot test profile');
+                return;
+            }
+            
+            try {
+                const user = await apiCall('/auth/current_user/');
+                console.log('Profile test - User data:', user);
+                
+                // Test what properties are available
+                const properties = ['id', 'username', 'email', 'phone', 'created_at', 'is_admin'];
+                const availableProps = properties.filter(prop => user.hasOwnProperty(prop));
+                console.log('Available properties:', availableProps);
+                
+            } catch (error) {
+                console.error('Profile test error:', error);
+            }
+        }
+        
+        async function testOrders() {
+            console.log('Testing orders...');
+            const authToken = localStorage.getItem('authToken');
+            
+            if (!authToken) {
+                console.log('No auth token, cannot test orders');
+                return;
+            }
+            
+            try {
+                const user = await apiCall('/auth/current_user/');
+                console.log('Testing orders for user ID:', user.id);
+                
+                const ordersData = await apiCall(`/orders/view_orders/${user.id}/`);
+                console.log('Orders data:', ordersData);
+                
+                document.getElementById('ordersData').innerHTML = `
+                    <pre>${JSON.stringify(ordersData, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Orders test error:', error);
+                document.getElementById('ordersData').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testReviews() {
+            console.log('Testing reviews...');
+            const authToken = localStorage.getItem('authToken');
+            
+            if (!authToken) {
+                console.log('No auth token, cannot test reviews');
+                return;
+            }
+            
+            try {
+                const user = await apiCall('/auth/current_user/');
+                console.log('Testing reviews for user ID:', user.id);
+                
+                const reviewsData = await apiCall('/reviews/get_all_reviews/');
+                console.log('All reviews data:', reviewsData);
+                
+                // Filter for current user
+                const userReviews = (reviewsData.general || []).filter(review => review.user_id === user.id);
+                console.log('User reviews:', userReviews);
+                
+                document.getElementById('reviewsData').innerHTML = `
+                    <h4>All Reviews:</h4>
+                    <pre>${JSON.stringify(reviewsData, null, 2)}</pre>
+                    <h4>User Reviews:</h4>
+                    <pre>${JSON.stringify(userReviews, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Reviews test error:', error);
+                document.getElementById('reviewsData').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testUserReviews() {
+            try {
+                const result = document.getElementById('userReviewsResult');
+                result.innerHTML = 'Testing...';
+                
+                const reviewsData = await apiCall('/reviews/get_all_reviews/');
+                console.log('All reviews data:', reviewsData);
+                
+                if (currentUser && currentUser.id) {
+                    const userReviews = (reviewsData.general || []).filter(review => review.user_id === currentUser.id);
+                    result.innerHTML = `
+                        <h4>User Reviews (${userReviews.length})</h4>
+                        <pre>${JSON.stringify(userReviews, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = '<p>No user logged in</p>';
+                }
+            } catch (error) {
+                document.getElementById('userReviewsResult').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testProfileData() {
+            try {
+                const result = document.getElementById('profileDataResult');
+                result.innerHTML = 'Testing...';
+                
+                const profileData = await apiCall('/profile/me/view/');
+                console.log('Profile data:', profileData);
+                
+                result.innerHTML = `
+                    <h4>Profile Data</h4>
+                    <pre>${JSON.stringify(profileData, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('profileDataResult').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testUserOrders() {
+            try {
+                const result = document.getElementById('userOrdersResult');
+                result.innerHTML = 'Testing...';
+                
+                const ordersData = await apiCall('/profile/me/my_orders/');
+                console.log('Orders data:', ordersData);
+                
+                result.innerHTML = `
+                    <h4>User Orders (Grouped by Status)</h4>
+                    <pre>${JSON.stringify(ordersData, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('userOrdersResult').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testProfileInitialization() {
+            try {
+                const result = document.getElementById('profileInitResult');
+                result.innerHTML = 'Testing...';
+                
+                const profileData = await apiCall('/profile/me/view/');
+                console.log('Profile data:', profileData);
+                
+                result.innerHTML = `
+                    <h4>Profile Data</h4>
+                    <pre>${JSON.stringify(profileData, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('profileInitResult').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Profile test page loaded');
+            setTimeout(() => {
+                checkAuth();
+                testProfile();
+                testOrders();
+                testReviews();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

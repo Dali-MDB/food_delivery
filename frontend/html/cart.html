@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - FoodExpress</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-utensils"></i>
+                <span>FoodExpress</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="categories.html" class="nav-link">Menu</a>
+                <a href="orders.html" class="nav-link">Orders</a>
+                <a href="reviews.html" class="nav-link">Reviews</a>
+            </div>
+            <div class="nav-auth">
+                <button id="loginBtn" class="btn btn-outline">Login</button>
+                <button id="signupBtn" class="btn btn-primary">Sign Up</button>
+                <button id="logoutBtn" class="btn btn-outline" style="display: none;">Logout</button>
+                <a href="profile.html" id="profileBtn" class="btn btn-primary" style="display: none; text-decoration: none;">Profile</a>
+            </div>
+            <div class="nav-cart">
+                <a href="cart.html" id="cartBtn" class="btn btn-cart" style="display: none; text-decoration: none;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cartCount">0</span>
+                </a>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Your Shopping Cart</h1>
+            <p>Review your items and proceed to checkout</p>
+        </div>
+    </section>
+
+    <!-- Cart Section -->
+    <section class="cart-page">
+        <div class="container">
+            <div class="cart-content">
+                <!-- Cart Items -->
+                <div class="cart-items-section">
+                    <h2>Cart Items</h2>
+                    <div id="cartItemsList" class="cart-items-list">
+                        <!-- Cart items will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Cart Summary -->
+                <div class="cart-summary">
+                    <h2>Order Summary</h2>
+                    <div class="summary-item">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Delivery Fee:</span>
+                        <span id="deliveryFee">$2.99</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span>Total:</span>
+                        <span id="cartTotal">$0.00</span>
+                    </div>
+                    
+                    <div class="cart-actions">
+                        <button id="clearCart" class="btn btn-outline btn-full">Clear Cart</button>
+                        <button id="continueShopping" class="btn btn-outline btn-full">Continue Shopping</button>
+                        <button id="checkoutBtn" class="btn btn-primary btn-full">Proceed to Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Empty Cart State -->
+    <div id="emptyCart" class="empty-cart" style="display: none;">
+        <div class="container">
+            <div class="empty-cart-content">
+                <i class="fas fa-shopping-cart"></i>
+                <h2>Your cart is empty</h2>
+                <p>Looks like you haven't added any items to your cart yet.</p>
+                <a href="categories.html" class="btn btn-primary">Browse Menu</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content checkout-modal">
+            <div class="modal-header">
+                <h2>Checkout</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="checkoutForm" class="checkout-form">
+                    <div class="form-group">
+                        <label for="checkoutAddress">Delivery Address</label>
+                        <textarea id="checkoutAddress" required placeholder="Enter your full delivery address"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkoutPhone">Phone Number</label>
+                        <input type="tel" id="checkoutPhone" required placeholder="Enter your phone number">
+                    </div>
+                    <div class="form-group">
+                        <label for="checkoutNotes">Special Instructions (Optional)</label>
+                        <textarea id="checkoutNotes" placeholder="Any special delivery instructions..."></textarea>
+                    </div>
+                    <div class="order-summary">
+                        <h3>Order Summary</h3>
+                        <div id="orderSummary" class="order-items">
+                            <!-- Order summary will be loaded here -->
+                        </div>
+                        <div class="order-total">
+                            <h4>Total: $<span id="orderTotal">0.00</span></h4>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Place Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h2>Login</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Login</button>
+                </form>
+                <p class="auth-switch">Don't have an account? <a href="#" id="switchToSignup">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h2>Sign Up</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="signupForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="signupUsername">Username</label>
+                        <input type="text" id="signupUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPhone">Phone</label>
+                        <input type="tel" id="signupPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Sign Up</button>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/cart.js"></script>
+</body>
+</html> 

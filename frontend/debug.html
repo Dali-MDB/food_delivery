@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Cart - FoodExpress</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container" style="padding-top: 100px;">
+        <h1>Cart Debug Page</h1>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="testAddToCart()" class="btn btn-primary">Test Add to Cart</button>
+            <button onclick="testViewCart()" class="btn btn-primary">Test View Cart</button>
+            <button onclick="testRemoveFromCart()" class="btn btn-primary">Test Remove from Cart</button>
+            <button onclick="clearDebugLog()" class="btn btn-outline">Clear Log</button>
+        </div>
+        
+        <div id="debugResults" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 8px; max-height: 400px; overflow-y: auto;">
+            <h3>Debug Log:</h3>
+            <div id="debugLog"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        function log(message) {
+            const debugLog = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `<p>[${timestamp}] ${message}</p>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+
+        function clearDebugLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+
+        async function testAddToCart() {
+            log('Testing add to cart...');
+            if (!currentUser) {
+                log('ERROR: No user logged in');
+                return;
+            }
+            
+            try {
+                const response = await apiCall('/orders/add_to_cart/1/?quantity=1', {
+                    method: 'POST'
+                });
+                log(`SUCCESS: Added item to cart - ${JSON.stringify(response)}`);
+            } catch (error) {
+                log(`ERROR: Failed to add to cart - ${error.message}`);
+            }
+        }
+
+        async function testViewCart() {
+            log('Testing view cart...');
+            if (!currentUser) {
+                log('ERROR: No user logged in');
+                return;
+            }
+            
+            try {
+                const response = await apiCall('/orders/view_cart/');
+                log(`SUCCESS: Cart data - ${JSON.stringify(response)}`);
+            } catch (error) {
+                log(`ERROR: Failed to view cart - ${error.message}`);
+            }
+        }
+
+        async function testRemoveFromCart() {
+            log('Testing remove from cart...');
+            if (!currentUser) {
+                log('ERROR: No user logged in');
+                return;
+            }
+            
+            try {
+                // First get cart to find an item to remove
+                const cartData = await apiCall('/orders/view_cart/');
+                if (cartData.item_orders && cartData.item_orders.length > 0) {
+                    const itemOrderId = cartData.item_orders[0].item_order_id;
+                    const response = await apiCall(`/orders/remove_from_cart/${itemOrderId}/`, {
+                        method: 'DELETE'
+                    });
+                    log(`SUCCESS: Removed item from cart - ${JSON.stringify(response)}`);
+                } else {
+                    log('INFO: No items in cart to remove');
+                }
+            } catch (error) {
+                log(`ERROR: Failed to remove from cart - ${error.message}`);
+            }
+        }
+
+        // Log when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Debug page loaded');
+            log(`Current user: ${currentUser ? currentUser.username : 'None'}`);
+            log(`Auth token: ${authToken ? 'Present' : 'None'}`);
+        });
+    </script>
+</body>
+</html> 

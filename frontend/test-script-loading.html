@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Loading Test</title>
+</head>
+<body>
+    <h1>Script Loading Test</h1>
+    <p>Check the console (F12) to see if the scripts load.</p>
+    
+    <div id="testResult">Testing script loading...</div>
+    
+    <script>
+        console.log('=== TEST PAGE LOADED ===');
+        
+        // Test if we can access the profile.js functions
+        window.addEventListener('load', function() {
+            console.log('=== WINDOW LOADED ===');
+            const testDiv = document.getElementById('testResult');
+            
+            if (typeof currentUser !== 'undefined') {
+                testDiv.innerHTML = '✅ Profile.js loaded successfully!';
+                console.log('✅ Profile.js variables are available');
+            } else {
+                testDiv.innerHTML = '❌ Profile.js not loaded!';
+                console.log('❌ Profile.js variables are NOT available');
+            }
+        });
+    </script>
+    
+    <!-- Try loading the scripts -->
+    <script src="js/profile.js"></script>
+</body>
+</html> 

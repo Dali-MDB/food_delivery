@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Test</title>
+</head>
+<body>
+    <h1>Category API Test</h1>
+    <button onclick="testCategoryAPI()">Test Category API</button>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE_URL}${endpoint}`;
+            console.log('Making request to:', url);
+            
+            const config = {
+                method: options.method || 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            };
+
+            if (options.body) {
+                config.body = options.body;
+            }
+
+            try {
+                const response = await fetch(url, config);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                return data;
+            } catch (error) {
+                console.error('API call failed:', error);
+                throw error;
+            }
+        }
+
+        async function testCategoryAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                console.log('Testing category API...');
+                const categories = await apiCall('/category/all/');
+                console.log('Categories loaded:', categories);
+                
+                resultDiv.innerHTML = `
+                    <h3>Success!</h3>
+                    <p>Found ${categories.length} categories:</p>
+                    <ul>
+                        ${categories.map(cat => `<li>${cat.name} (ID: ${cat.id})</li>`).join('')}
+                    </ul>
+                    <pre>${JSON.stringify(categories, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultDiv.innerHTML = `
+                    <h3>Error!</h3>
+                    <p>${error.message}</p>
+                    <p>Check browser console for details.</p>
+                `;
+            }
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, testing category API...');
+            testCategoryAPI();
+        });
+    </script>
+</body>
+</html> 
