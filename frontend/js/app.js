@@ -524,21 +524,25 @@ document.addEventListener('DOMContentLoaded', function() {
     loadReviews();
     
     // Navigation events
-    elements.loginBtn.addEventListener('click', () => openModal(elements.loginModal));
-    elements.signupBtn.addEventListener('click', () => openModal(elements.signupModal));
-    elements.logoutBtn.addEventListener('click', logout);
-    elements.profileBtn.addEventListener('click', () => {
+    if (elements.loginBtn) elements.loginBtn.addEventListener('click', () => openModal(elements.loginModal));
+    if (elements.signupBtn) elements.signupBtn.addEventListener('click', () => openModal(elements.signupModal));
+    if (elements.logoutBtn) elements.logoutBtn.addEventListener('click', logout);
+    if (elements.profileBtn) elements.profileBtn.addEventListener('click', () => {
         window.location.href = 'html/profile.html';
     });
     // Cart button is now a link to cart.html, no need for modal trigger
     
     // Modal close events
-    elements.closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const modal = button.closest('.modal');
-            closeModal(modal);
+    if (elements.closeButtons) {
+        elements.closeButtons.forEach(button => {
+            if (button) {
+                button.addEventListener('click', () => {
+                    const modal = button.closest('.modal');
+                    closeModal(modal);
+                });
+            }
         });
-    });
+    }
     
     // Close modal when clicking outside
     window.addEventListener('click', (event) => {
@@ -548,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Auth form events
-    elements.loginForm.addEventListener('submit', async (e) => {
+    if (elements.loginForm) elements.loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
@@ -562,7 +566,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    elements.signupForm.addEventListener('submit', async (e) => {
+    if (elements.signupForm) elements.signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const userData = {
             username: document.getElementById('signupUsername').value,
@@ -581,21 +585,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Auth switch events
-    elements.switchToSignup.addEventListener('click', (e) => {
+    if (elements.switchToSignup) elements.switchToSignup.addEventListener('click', (e) => {
         e.preventDefault();
         closeModal(elements.loginModal);
         openModal(elements.signupModal);
     });
     
-    elements.switchToLogin.addEventListener('click', (e) => {
+    if (elements.switchToLogin) elements.switchToLogin.addEventListener('click', (e) => {
         e.preventDefault();
         closeModal(elements.signupModal);
         openModal(elements.loginModal);
     });
     
     // Cart events
-    document.getElementById('clearCart').addEventListener('click', clearCart);
-    document.getElementById('checkoutBtn').addEventListener('click', () => {
+    if (document.getElementById('clearCart')) document.getElementById('clearCart').addEventListener('click', clearCart);
+    if (document.getElementById('checkoutBtn')) document.getElementById('checkoutBtn').addEventListener('click', () => {
         if (cart.length === 0) {
             showMessage('Your cart is empty', 'warning');
             return;
@@ -618,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Checkout form event
-    elements.checkoutForm.addEventListener('submit', async (e) => {
+    if (elements.checkoutForm) elements.checkoutForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const address = document.getElementById('checkoutAddress').value;
         
@@ -630,27 +634,35 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Smooth scrolling for navigation links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+    if (elements.categoriesGrid) {
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            if (anchor) {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
                 });
             }
         });
-    });
+    }
     
     // Hero button events
-    document.querySelector('.hero-buttons .btn-primary').addEventListener('click', () => {
-        document.getElementById('categories').scrollIntoView({ behavior: 'smooth' });
-    });
+    if (document.querySelector('.hero-buttons .btn-primary')) {
+        document.querySelector('.hero-buttons .btn-primary').addEventListener('click', () => {
+            document.getElementById('categories').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
     
-    document.querySelector('.hero-buttons .btn-outline').addEventListener('click', () => {
-        document.getElementById('categories').scrollIntoView({ behavior: 'smooth' });
-    });
+    if (document.querySelector('.hero-buttons .btn-outline')) {
+        document.querySelector('.hero-buttons .btn-outline').addEventListener('click', () => {
+            document.getElementById('categories').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
 });
 
 // Keyboard shortcuts
