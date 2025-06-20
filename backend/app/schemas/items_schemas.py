@@ -16,6 +16,7 @@ class ItemCreate(ItemBase):
 class ItemDisplay(ItemBase):
     id : int 
     category_name : str
+    category_id : int
 
     class Config:
         orm_model = True

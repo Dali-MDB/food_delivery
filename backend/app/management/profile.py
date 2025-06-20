@@ -10,6 +10,7 @@ from app.models.users import User
 from app.models.reviews import Review   
 from typing import Annotated
 from app.models.reviews import review_type
+from app.management.admin_permission import verify_permission
 
 
 profile_router = routing.APIRouter(
@@ -134,3 +135,13 @@ def view_profile(user_id:int,token:Annotated[str,Depends(oauth2_scheme)],db:sess
     if user_db is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not found")
     return user_db
+
+
+
+#fetch all admins
+@profile_router.get('/all_admins/',response_model=list[UserDisplay])
+def all_admins(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    user = current_user(token,db)   
+    verify_permission(user)
+    admins = db.query(User).filter(User.is_admin == True).all()
+    return admins

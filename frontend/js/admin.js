@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Fetch data for the restored section
         if (lastSection === 'categories') fetchCategories();
         if (lastSection === 'items') { fetchAllCategoriesForItems(); fetchAllItems(); }
+        if (lastSection === 'add-admin') fetchAndDisplayAdmins();
     }
     // Set admin info in sidebar (if available)
     try {
@@ -406,7 +407,6 @@ async function fetchAllCategoriesForItems() {
 function populateCategoryDropdowns() {
     const options = allCategories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
     if (itemCategorySelect) itemCategorySelect.innerHTML = options;
-    if (editItemCategorySelect) editItemCategorySelect.innerHTML = options;
     if (itemsCategoryFilter) {
         itemsCategoryFilter.innerHTML = '<option value="all">All Categories</option>' + options;
     }
@@ -455,9 +455,16 @@ function displayItemsList() {
     const filterCat = itemsCategoryFilter ? itemsCategoryFilter.value : 'all';
     let html = '';
     if (filterCat !== 'all') {
-        html += sortedItems.map(item => `
-            <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                <div>\n                    <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                    <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                    <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                </div>\n                <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                    <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                    <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                </div>\n            </div>
-        `).join('');
+        html += sortedItems.map(item => {
+            let catName = item.category_name || 'Uncategorized';
+            if (!item.category_name && allCategories && allCategories.length) {
+                const cat = allCategories.find(c => c.id === item.category_id);
+                if (cat) catName = cat.name;
+            }
+            return `
+            <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                <div>\n                    <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                    <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>\n                    <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                    <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                </div>\n                <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                    <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                    <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                </div>\n            </div>
+            `;
+        }).join('');
         html += '</div></div>';
     } else {
         // Group by category as before
@@ -479,16 +486,22 @@ function displayItemsList() {
             const group = itemsByCategory[String(cat.id)];
             if (!group || !group.length) continue;
             html += `<div><h3 style=\"margin-bottom: 1em; color: #2563eb;\">${cat.name}</h3><div style=\"display: flex; flex-direction: column; gap: 0.75em;\">`;
-            html += group.map(item => `
-                <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                    <div>\n                        <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                        <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                        <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                    </div>\n                    <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                        <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                        <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                    </div>\n                </div>
-            `).join('');
+            html += group.map(item => {
+                let catName = item.category_name || cat.name;
+                return `
+                <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                    <div>\n                        <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                        <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>\n                        <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                        <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                    </div>\n                    <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                        <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                        <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                    </div>\n                </div>
+                `;
+            }).join('');
             html += '</div></div>';
         }
         if (itemsByCategory['uncategorized'] && itemsByCategory['uncategorized'].length) {
             html += `<div><h3 style=\"margin-bottom: 1em; color: #2563eb;\">Uncategorized</h3><div style=\"display: flex; flex-direction: column; gap: 0.75em;\">`;
-            html += itemsByCategory['uncategorized'].map(item => `
-                <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                    <div>\n                        <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                        <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                        <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                    </div>\n                    <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                        <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                        <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                    </div>\n                </div>
-            `).join('');
+            html += itemsByCategory['uncategorized'].map(item => {
+                let catName = item.category_name || 'Uncategorized';
+                return `
+                <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                    <div>\n                        <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                        <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>\n                        <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                        <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                    </div>\n                    <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                        <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                        <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                    </div>\n                </div>
+                `;
+            }).join('');
             html += '</div></div>';
         }
     }
@@ -529,6 +542,11 @@ function showAddItemModal() {
     fetchAllCategoriesForItems();
 }
 function showEditItemModal(itemId) {
+    // If categories are not loaded, fetch them first, then call this function again
+    if (!allCategories || allCategories.length === 0) {
+        fetchAllCategoriesForItems().then(() => showEditItemModal(itemId));
+        return;
+    }
     addItemContainerModal.style.display = 'none';
     editItemContainerModal.style.display = 'block';
     adminItemModal.style.display = 'block';
@@ -538,10 +556,25 @@ function showEditItemModal(itemId) {
     document.getElementById('editItemName').value = item.name;
     document.getElementById('editItemDescription').value = item.description || '';
     document.getElementById('editItemPrice').value = item.price;
-    fetchAllCategoriesForItems();
-    setTimeout(() => {
-        document.getElementById('editItemCategory').value = item.category_id;
-    }, 100);
+    // Find the category name
+    const cat = allCategories.find(c => c.id == item.category_id);
+    const catName = cat ? cat.name : '';
+    document.getElementById('editItemCategoryName').textContent = catName ? `Current: ${catName}` : '';
+    // Populate dropdown with all categories
+    let options = allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    const select = document.getElementById('editItemCategory');
+    select.innerHTML = options;
+    // Try to set the value directly
+    select.value = String(item.category_id);
+    // Fallback: if not set, loop and set selected/index
+    if (select.value !== String(item.category_id)) {
+        for (let i = 0; i < select.options.length; i++) {
+            if (String(select.options[i].value) === String(item.category_id)) {
+                select.selectedIndex = i;
+                break;
+            }
+        }
+    }
 }
 function hideAdminItemModal() {
     adminItemModal.style.display = 'none';
@@ -609,6 +642,22 @@ addItemForm.onsubmit = async function(e) {
     }
 };
 
+// Add success and error message containers if not present
+if (!document.getElementById('editItemSuccess')) {
+    const msgDiv = document.createElement('div');
+    msgDiv.id = 'editItemSuccess';
+    msgDiv.style = 'display:none; color:#2ecc40; font-weight:600; margin-bottom:1em;';
+    editItemContainerModal.parentNode.insertBefore(msgDiv, editItemContainerModal);
+}
+if (!document.getElementById('editItemError')) {
+    const msgDiv = document.createElement('div');
+    msgDiv.id = 'editItemError';
+    msgDiv.style = 'display:none; color:#e74c3c; font-weight:600; margin-bottom:1em;';
+    editItemContainerModal.parentNode.insertBefore(msgDiv, editItemContainerModal);
+}
+const editItemSuccess = document.getElementById('editItemSuccess');
+const editItemError = document.getElementById('editItemError');
+
 editItemForm.onsubmit = async function(e) {
     e.preventDefault();
     const id = document.getElementById('editItemId').value;
@@ -627,14 +676,16 @@ editItemForm.onsubmit = async function(e) {
             },
             body: JSON.stringify({ name, description, price, category_id })
         });
-        if (!response.ok) throw new Error('Failed to update item');
-        editItemForm.reset();
-        editItemContainer.style.display = 'none';
-        addItemContainer.style.display = 'flex';
-        setActiveSection('items');
-        fetchAllItems();
+        if (response.ok) {
+            await fetchAllItems();
+            editItemForm.reset();
+            editItemContainer.style.display = 'none';
+            addItemContainer.style.display = 'flex';
+            setActiveSection('items');
+        }
+        // No messages shown regardless of result
     } catch {
-        alert('Failed to update item');
+        // No messages shown on error
     }
 };
 
@@ -670,4 +721,110 @@ if (itemsSection) {
 }
 
 // On initial load, fetch all items
-fetchAllItems(); 
+fetchAllItems();
+
+// === Add Admin Modal Logic ===
+const showAddAdminBtn = document.getElementById('showAddAdminBtn');
+const adminAddAdminModal = document.getElementById('adminAddAdminModal');
+const closeAdminAddAdminModal = document.getElementById('closeAdminAddAdminModal');
+const cancelAddAdminModal = document.getElementById('cancelAddAdminModal');
+const addAdminForm = document.getElementById('addAdminForm');
+const addAdminSuccess = document.getElementById('addAdminSuccess');
+const addAdminError = document.getElementById('addAdminError');
+
+function showAddAdminModal() {
+    adminAddAdminModal.style.display = 'block';
+    addAdminError.style.display = 'none';
+    addAdminForm.reset();
+}
+function hideAddAdminModal() {
+    adminAddAdminModal.style.display = 'none';
+}
+if (showAddAdminBtn) showAddAdminBtn.onclick = showAddAdminModal;
+if (closeAdminAddAdminModal) closeAdminAddAdminModal.onclick = hideAddAdminModal;
+if (cancelAddAdminModal) cancelAddAdminModal.onclick = hideAddAdminModal;
+
+if (addAdminForm) {
+    addAdminForm.onsubmit = async function(e) {
+        e.preventDefault();
+        addAdminError.style.display = 'none';
+        const username = document.getElementById('adminUsername').value.trim();
+        const email = document.getElementById('adminEmail').value.trim();
+        const phone = document.getElementById('adminPhone').value.trim();
+        const password = document.getElementById('adminPassword').value;
+        const authToken = localStorage.getItem('authToken');
+        try {
+            const response = await fetch('http://localhost:8000/add_admin/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ username, email, phone, password })
+            });
+            if (response.ok) {
+                addAdminSuccess.textContent = 'Admin added successfully!';
+                addAdminSuccess.style.display = 'block';
+                hideAddAdminModal();
+                setTimeout(() => { addAdminSuccess.style.display = 'none'; }, 3000);
+            } else {
+                const data = await response.json();
+                addAdminError.textContent = data.detail || 'Failed to add admin.';
+                addAdminError.style.display = 'block';
+            }
+        } catch (err) {
+            addAdminError.textContent = 'Network error. Please try again.';
+            addAdminError.style.display = 'block';
+        }
+    };
+}
+
+// === Admins List Logic ===
+const adminListContainer = document.getElementById('adminListContainer');
+
+async function fetchAndDisplayAdmins() {
+    if (!adminListContainer) return;
+    const authToken = localStorage.getItem('authToken');
+    adminListContainer.innerHTML = '<div class="admin-empty-message">Loading admins...</div>';
+    try {
+        const response = await fetch('http://localhost:8000/profile/all_admins/', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch admins');
+        const admins = await response.json();
+        if (!admins.length) {
+            adminListContainer.innerHTML = '<div class="admin-empty-message">No admins found.</div>';
+            return;
+        }
+        adminListContainer.innerHTML = admins.map(admin => `
+            <div class="admin-card" style="display: flex; align-items: center; gap: 1.5em; padding: 1em 1.5em; margin-bottom: 0.5em;">
+                <div style="font-size: 1.7em; color: #2d7d46;"><i class="fas fa-user-shield"></i></div>
+                <div style="flex:1;">
+                    <div style="font-weight: 600; font-size: 1.1rem;">${admin.username}</div>
+                    <div style="color: #555; font-size: 0.98em;">${admin.email}</div>
+                    <div style="color: #888; font-size: 0.95em;">${admin.phone || ''}</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        adminListContainer.innerHTML = '<div class="admin-empty-message">Failed to load admins.<br>Try refreshing the page.</div>';
+    }
+}
+
+// Fetch admins when Add Admin section is shown
+const addAdminSectionLink = document.querySelector('.sidebar-link[data-section="add-admin"]');
+if (addAdminSectionLink) {
+    addAdminSectionLink.addEventListener('click', fetchAndDisplayAdmins);
+}
+// Also fetch on page load if Add Admin is the active section
+if (document.getElementById('add-admin')?.classList.contains('active')) {
+    fetchAndDisplayAdmins();
+}
+// Refresh admins list after adding a new admin
+if (addAdminForm) {
+    const origSubmit = addAdminForm.onsubmit;
+    addAdminForm.onsubmit = async function(e) {
+        await origSubmit.call(this, e);
+        fetchAndDisplayAdmins();
+    };
+} 
