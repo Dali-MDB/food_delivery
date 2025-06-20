@@ -17,6 +17,9 @@ class ItemDisplay(ItemBase):
     id : int 
     category_name : str
 
+    class Config:
+        orm_model = True
+
     
 class ItemUpdate(ItemBase):
     name : str | None

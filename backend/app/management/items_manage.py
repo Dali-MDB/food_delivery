@@ -34,6 +34,10 @@ def add_item(item:ItemCreate,db:sessionDep,token:Annotated[str,Depends(oauth2_sc
     return new_item
 
 
+@items_router.get('/all/',response_model=list[ItemDisplay])
+def get_all_items(db:sessionDep):
+    items = db.query(Item).all()
+    return items
 
 #a helper function to fet the item
 def fetch_item(item_id:int,db:sessionDep):

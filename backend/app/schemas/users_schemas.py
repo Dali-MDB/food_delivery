@@ -7,7 +7,7 @@ class UserBase(BaseModel):
     username : str = Field(max_length=30)
     phone : str = Field(max_length=15)
     email : EmailStr = Field(max_length=50)
-    is_admin : bool = Field(default=False)
+    
 
 
 class UserCreate(UserBase):
@@ -16,6 +16,7 @@ class UserCreate(UserBase):
 
 class UserDisplay(UserBase):
     id : int 
+    is_admin : bool = Field(default=False)
 
     class config:
         orm_mode = True
@@ -25,6 +26,7 @@ class User(UserBase):
     id : int
     password : str
     orders : List[Order]
+    is_admin : bool = Field(default=False)
 
     class config:
         orm_mode = True

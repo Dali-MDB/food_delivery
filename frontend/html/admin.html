@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - FoodExpress</title>
+    <title>Admin - FoodExpress</title>
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -43,283 +45,179 @@
         </div>
     </nav>
 
-    <!-- Profile Section -->
-    <section class="profile-page">
-        <div class="profile-container">
-            <!-- Sidebar -->
-            <div class="profile-sidebar">
-                <div class="sidebar-header">
-                    <div class="user-avatar">
+    <!-- admin Section -->
+    
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" style="width: 240px; min-width: 240px; max-width: 240px;">
+            <div class="sidebar-header">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="sidebarAdminUsername">Admin Dashboard</h3>
+                </div>
+            </div>
+            <nav class="admin-sidebar-nav">
+                <a href="#" class="sidebar-link active" data-section="admin-dashboard">
+                    <i class="fas fa-gauge"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="sidebar-link" data-section="add-admin">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Add Admin</span>
+                </a>
+                <a href="#" class="sidebar-link" data-section="categories">
+                    <i class="fas fa-list"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="#" class="sidebar-link" data-section="items">
+                    <i class="fas fa-burger"></i>
+                    <span>Items</span>
+                </a>
+                <a href="#" class="sidebar-link" data-section="orders">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="#" class="sidebar-link" data-section="reviews">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="#" class="sidebar-link" data-section="users">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtnSidebar" class="btn btn-danger btn-full">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="management-content">
+            <!-- Admin Dashboard Section -->
+            <div id="admin-dashboard" class="content-section active">
+                <div class="section-header">
+                    <h2>Admin Dashboard</h2>
+                    <p>View and manage your account information</p>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-avatar-large">
                         <i class="fas fa-user"></i>
                     </div>
-                    <div class="user-info">
-                        <h3 id="sidebarAdminUsername">Admin Dashboard</h3>
+                    <div class="admin-details">
+                        <h3 id="adminUsername">Loading...</h3>
+                        <p id="adminEmail">loading@email.com</p>
+                        <p id="adminPhone">Loading phone...</p>
+                        <p id="adminJoinDate">Member since: Loading...</p>
                     </div>
-                </div>
-                
-                <nav class="sidebar-nav">
-                    <a href="#profile" class="sidebar-link active" data-section="profile">
-                        <i class="fas fa-user-circle"></i>
-                        <span>Profile</span>
-                    </a>
-                    <a href="#edit-profile" class="sidebar-link" data-section="edit-profile">
-                        <i class="fas fa-edit"></i>
-                        <span>Edit Profile</span>
-                    </a>
-                    <a href="#change-password" class="sidebar-link" data-section="change-password">
-                        <i class="fas fa-lock"></i>
-                        <span>Change Password</span>
-                    </a>
-                    <a href="#my-orders" class="sidebar-link" data-section="my-orders">
-                        <i class="fas fa-shopping-bag"></i>
-                        <span>My Orders</span>
-                    </a>
-                    <a href="#my-reviews" class="sidebar-link" data-section="my-reviews">
-                        <i class="fas fa-star"></i>
-                        <span>My Reviews</span>
-                    </a>
-                    <a href="#add-review" class="sidebar-link" data-section="add-review">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Add Review</span>
-                    </a>
-                    <a href="#settings" class="sidebar-link" data-section="settings">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </a>
-                </nav>
-                
-                <div class="sidebar-footer">
-                    <button id="logoutBtnSidebar" class="btn btn-danger btn-full">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Logout
-                    </button>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <div class="profile-content">
-                <!-- Profile Section -->
-                <div id="profile" class="content-section active">
-                    <div class="section-header">
-                        <h2>Profile</h2>
-                        <p>View and manage your account information</p>
-                    </div>
-                    
-                    <div class="profile-card">
-                        <div class="profile-avatar-large">
-                            <i class="fas fa-user"></i>
+                    <div class="admin-stats">
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalOrders">0</span>
+                            <span class="stat-label">Total Orders</span>
                         </div>
-                        <div class="profile-details">
-                            <h3 id="profileUsername">Loading...</h3>
-                            <p id="profileEmail">loading@email.com</p>
-                            <p id="profilePhone">Loading phone...</p>
-                            <p id="profileJoinDate">Member since: Loading...</p>
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalReviews">0</span>
+                            <span class="stat-label">Reviews</span>
                         </div>
-                        <div class="profile-stats">
-                            <div class="stat-item">
-                                <span class="stat-number" id="totalOrders">0</span>
-                                <span class="stat-label">Total Orders</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number" id="totalReviews">0</span>
-                                <span class="stat-label">Reviews</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number" id="memberSince">0</span>
-                                <span class="stat-label">Days</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Edit Profile Section -->
-                <div id="edit-profile" class="content-section">
-                    <div class="section-header">
-                        <h2>Edit Profile</h2>
-                        <p>Update your personal information</p>
-                    </div>
-                    
-                    <div class="form-card">
-                        <form id="editProfileForm">
-                            <div class="form-group">
-                                <label for="editUsername">Username</label>
-                                <input type="text" id="editUsername" >
-                            </div>
-                            <div class="form-group">
-                                <label for="editEmail">Email</label>
-                                <input type="email" id="editEmail" >
-                            </div>
-                            <div class="form-group">
-                                <label for="editPhone">Phone</label>
-                                <input type="tel" id="editPhone" >
-                            </div>
-                            <button type="submit" class="btn btn-primary">Update Profile</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Change Password Section -->
-                <div id="change-password" class="content-section">
-                    <div class="section-header">
-                        <h2>Change Password</h2>
-                        <p>Update your account password</p>
-                    </div>
-                    
-                    <div class="form-card">
-                        <form id="changePasswordForm">
-                            <div class="form-group">
-                                <label for="currentPassword">Current Password</label>
-                                <input type="password" id="currentPassword" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="newPassword">New Password</label>
-                                <input type="password" id="newPassword" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="confirmPassword">Confirm New Password</label>
-                                <input type="password" id="confirmPassword" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Change Password</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- My Orders Section -->
-                <div id="my-orders" class="content-section">
-                    <div class="section-header">
-                        <h2>My Orders</h2>
-                        <p>View your order history</p>
-                    </div>
-                    
-                    <div class="orders-list" id="profileOrdersList">
-                        <!-- Orders will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- My Reviews Section -->
-                <div id="my-reviews" class="content-section">
-                    <div class="section-header">
-                        <h2>My Reviews</h2>
-                        <p>View and manage your reviews</p>
-                    </div>
-                    <div class="review-type-filters" style="margin-bottom: 1em;">
-                        <label><input type="radio" name="reviewTypeFilter" id="reviewTypeAll" value="all" checked> All</label>
-                        <label><input type="radio" name="reviewTypeFilter" id="reviewTypeGeneral" value="general"> General</label>
-                        <label><input type="radio" name="reviewTypeFilter" id="reviewTypeItem" value="item_review"> Item</label>
-                        <label><input type="radio" name="reviewTypeFilter" id="reviewTypeOrder" value="order_review"> Order</label>
-                    </div>
-                    <div class="reviews-list" id="profileReviewsList">
-                        <!-- Reviews will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Add Review Section -->
-                <div id="add-review" class="content-section">
-                    <div class="section-header">
-                        <h2>Add Review</h2>
-                        <p>Share your experience with us</p>
-                    </div>
-                    
-                    <div class="form-card">
-                        <form id="addReviewForm">
-                            <div class="form-group">
-                                <label for="reviewType">Review Type</label>
-                                <select id="reviewType" required>
-                                    <option value="">Select review type...</option>
-                                    <option value="general">General Review</option>
-                                    <option value="item_review">Item Review</option>
-                                    <option value="order_review">Order Review</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group" id="itemSelectGroup" style="display: none;">
-                                <label for="itemSelect">Select Item</label>
-                                <select id="itemSelect">
-                                    <option value="">Choose an item...</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group" id="orderSelectGroup" style="display: none;">
-                                <label for="orderSelect">Select Order</label>
-                                <select id="orderSelect">
-                                    <option value="">Choose an order...</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="reviewRating">Rating</label>
-                                <div class="rating-input">
-                                    <input type="radio" name="rating" value="1" id="star1">
-                                    <label for="star1">★</label>
-                                    <input type="radio" name="rating" value="2" id="star2">
-                                    <label for="star2">★</label>
-                                    <input type="radio" name="rating" value="3" id="star3">
-                                    <label for="star3">★</label>
-                                    <input type="radio" name="rating" value="4" id="star4">
-                                    <label for="star4">★</label>
-                                    <input type="radio" name="rating" value="5" id="star5">
-                                    <label for="star5">★</label>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="reviewContent">Review Content</label>
-                                <textarea id="reviewContent" rows="4" required placeholder="Share your experience..."></textarea>
-                                <div class="char-count">
-                                    <span id="charCount">0</span>/500 characters
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">Submit Review</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Settings Section -->
-                <div id="settings" class="content-section">
-                    <div class="section-header">
-                        <h2>Settings</h2>
-                        <p>Manage your account preferences</p>
-                    </div>
-                    
-                    <div class="settings-card">
-                        <div class="setting-item">
-                            <div class="setting-info">
-                                <h4>Email Notifications</h4>
-                                <p>Receive email updates about your orders</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="emailNotifications" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="setting-item">
-                            <div class="setting-info">
-                                <h4>Order Updates</h4>
-                                <p>Get notified when your order status changes</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="orderUpdates" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="setting-item">
-                            <div class="setting-info">
-                                <h4>Promotional Emails</h4>
-                                <p>Receive special offers and promotions</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="promotionalEmails">
-                                <span class="slider"></span>
-                            </label>
+                        <div class="stat-item">
+                            <span class="stat-number" id="memberSince">0</span>
+                            <span class="stat-label">Days</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+
+            <!-- Add Admin Section -->
+            <div id="add-admin" class="content-section">
+                <div class="section-header">
+                    <h2>Add Admin</h2>
+                    <p>Invite or create a new admin user (feature coming soon)</p>
+                </div>
+                <div class="admin-card">
+                    <p>Feature coming soon.</p>
+                </div>
+            </div>
+
+            <!-- Categories Management Section -->
+            <div id="categories" class="content-section">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2>Categories Management</h2>
+                        <p>View, add, edit, or delete categories</p>
+                    </div>
+                    <button id="showAddCategoryBtn" class="btn btn-primary" style="font-size: 1.5rem; padding: 0.5em 1em; display: flex; align-items: center;"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="categoriesList" style="display: flex; flex-direction: column; gap: 1em;">
+                    <!-- Categories will be loaded here as cards/rows -->
+                        </div>
+                <div id="categoryItemsContainer" style="margin-top:2em;">
+                    <!-- Items for selected category will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Items Management Section -->
+            <div id="items" class="content-section">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2>Items Management</h2>
+                    </div>
+                    <div style="display: flex; gap: 1em; align-items: center;">
+                        <select id="itemsCategoryFilter" class="form-control" style="min-width: 140px;">
+                            <option value="all">All Categories</option>
+                            <!-- Category options will be populated by JS -->
+                        </select>
+                        <select id="itemsSortSelect" class="form-control" style="min-width: 120px;">
+                            <option value="name">Sort by Name</option>
+                            <option value="price">Sort by Price</option>
+                            <option value="category">Sort by Category</option>
+                        </select>
+                        <button id="showAddItemBtn" class="btn btn-primary" style="font-size: 1.5rem; padding: 0.5em 1em; display: flex; align-items: center;"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div id="itemsList" style="display: flex; flex-direction: column; gap: 2em;">
+                    <!-- Items will be loaded here as cards grouped by category -->
+                </div>
+            </div>
+
+            <!-- Orders Management Section -->
+            <div id="orders" class="content-section">
+                <div class="section-header">
+                    <h2>Orders Management</h2>
+                    <p>View and manage all orders (feature coming soon)</p>
+                </div>
+                <div class="admin-card">
+                    <p>Feature coming soon.</p>
+                </div>
+            </div>
+
+            <!-- Reviews Management Section -->
+            <div id="reviews" class="content-section">
+                <div class="section-header">
+                    <h2>Reviews Management</h2>
+                    <p>View and manage reviews (feature coming soon)</p>
+                </div>
+                <div class="admin-card">
+                    <p>Feature coming soon.</p>
+                </div>
+            </div>
+
+            <!-- Users Management Section -->
+            <div id="users" class="content-section">
+                <div class="section-header">
+                    <h2>Users Management</h2>
+                    <p>View and manage users (feature coming soon)</p>
+                </div>
+                <div class="admin-card">
+                    <p>Feature coming soon.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
 
     <!-- Login Modal -->
     <div id="loginModal" class="modal">
@@ -376,8 +274,116 @@
             </div>
         </div>
     </div>
+     
+    <!-- Simple Delete Confirmation Modal -->
+    <div id="adminConfirmModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width: 500px; text-align: center;">
+        <div style="padding: 2em 1em;">
+          <div id="adminConfirmMessage" style="font-size: 1.15rem; margin-bottom: 2em;">Are you sure you want to delete this item?</div>
+          <div style="display: flex; gap: 1em; justify-content: center;">
+            <button id="adminConfirmCancel" class="btn btn-secondary" type="button">Cancel</button>
+            <button id="adminConfirmOk" class="btn btn-danger" type="button">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Item Add/Edit Modal -->
+    <div id="adminItemModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width: 380px;">
+        <button id="closeAdminItemModal" class="btn btn-secondary" style="position: absolute; top: 12px; right: 18px; z-index: 2;">&times;</button>
+        <div id="addItemContainerModal" style="display:none;">
+          <form id="addItemForm" style="display: flex; flex-direction: column; gap: 0.5em;">
+            <h3 style="margin-bottom: 0.5em;">Add Item</h3>
+            <div class="modal-form-row">
+              <label for="itemName">Name</label>
+              <input type="text" id="itemName" required class="form-control">
+            </div>
+            <div class="modal-form-row">
+              <label for="itemDescription">Description</label>
+              <input type="text" id="itemDescription" class="form-control">
+            </div>
+            <div class="modal-form-row">
+              <label for="itemPrice">Price</label>
+              <input type="number" id="itemPrice" required class="form-control" min="0" step="0.01">
+            </div>
+            <div class="modal-form-row">
+              <label for="itemCategory">Category</label>
+              <select id="itemCategory" required class="form-control"></select>
+            </div>
+            <div style="display: flex; gap: 1em; justify-content: flex-end; margin-top: 1em;">
+              <button type="submit" class="btn btn-primary">Add Item</button>
+              <button type="button" id="cancelAddItemModal" class="btn btn-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div id="editItemContainerModal" style="display:none;">
+          <form id="editItemForm" style="display: flex; flex-direction: column; gap: 0.5em;">
+            <h3 style="margin-bottom: 0.5em;">Edit Item</h3>
+            <input type="hidden" id="editItemId">
+            <div class="modal-form-row">
+              <label for="editItemName">Name</label>
+              <input type="text" id="editItemName" required class="form-control">
+            </div>
+            <div class="modal-form-row">
+              <label for="editItemDescription">Description</label>
+              <input type="text" id="editItemDescription" class="form-control">
+            </div>
+            <div class="modal-form-row">
+              <label for="editItemPrice">Price</label>
+              <input type="number" id="editItemPrice" required class="form-control" min="0" step="0.01">
+            </div>
+            <div class="modal-form-row">
+              <label for="editItemCategory">Category</label>
+              <select id="editItemCategory" required class="form-control"></select>
+            </div>
+            <div style="display: flex; gap: 1em; justify-content: flex-end; margin-top: 1em;">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <button type="button" id="cancelEditItemModal" class="btn btn-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
-    <script src="../js/app.js"></script>
+    <!-- Category Add/Edit Modal -->
+    <div id="adminCategoryModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width: 440px;">
+        <button id="closeAdminCategoryModal" class="btn btn-secondary" style="position: absolute; top: 12px; right: 18px; z-index: 2;">&times;</button>
+        <div id="addCategoryContainerModal" style="display:none;">
+          <form id="addCategoryForm" style="display: flex; flex-direction: column; gap: 0.5em;">
+            <h3 style="margin-bottom: 0.5em;">Add Category</h3>
+            <div class="modal-form-row">
+              <label for="categoryName">Name</label>
+              <input type="text" id="categoryName" required class="form-control">
+            </div>
+            <div style="display: flex; gap: 1em; justify-content: flex-end; margin-top: 1em;">
+              <button type="submit" class="btn btn-primary">Add Category</button>
+              <button type="button" id="cancelAddCategoryModal" class="btn btn-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div id="editCategoryContainerModal" style="display:none;">
+          <form id="editCategoryForm" style="display: flex; flex-direction: column; gap: 0.5em;">
+            <h3 style="margin-bottom: 0.5em;">Edit Category</h3>
+            <input type="hidden" id="editCategoryId">
+            <div class="modal-form-row">
+              <label for="editCategoryName">Name</label>
+              <input type="text" id="editCategoryName" required class="form-control">
+            </div>
+            <div style="display: flex; gap: 1em; justify-content: flex-end; margin-top: 1em;">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <button type="button" id="cancelEditCategoryModal" class="btn btn-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+     <script src="../js/app.js"></script>
     <script src="../js/profile.js"></script>
+    <script src="../js/admin.js"></script>
+
+   
 </body>
 </html> 
