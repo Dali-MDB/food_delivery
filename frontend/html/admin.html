@@ -145,8 +145,8 @@
                     <p style="margin:0;">Add a new admin to the system. Only existing admins can do this.</p>
                 </div>
                 <div id="adminListContainer" style="margin-top:2em;"></div>
-            </div>
-
+                </div>
+                
             <!-- Add Admin Modal -->
             <div id="adminAddAdminModal" class="modal" style="display:none;">
               <div class="modal-content" style="max-width: 380px;">
@@ -165,19 +165,19 @@
                     <div class="modal-form-row">
                       <label for="adminPhone">Phone</label>
                       <input type="tel" id="adminPhone" required class="form-control">
-                    </div>
+                        </div>
                     <div class="modal-form-row">
                       <label for="adminPassword">Password</label>
                       <input type="password" id="adminPassword" required class="form-control">
-                    </div>
+                        </div>
                     <div id="addAdminError" style="color: #e74c3c; font-size: 1em; margin-bottom: 0.5em; display:none;"></div>
                     <div style="display: flex; gap: 1em; justify-content: flex-end; margin-top: 1em;">
                       <button type="submit" class="btn btn-primary">Add Admin</button>
                       <button type="button" id="cancelAddAdminModal" class="btn btn-secondary">Cancel</button>
-                    </div>
-                  </form>
+                        </div>
+                    </form>
                 </div>
-              </div>
+                </div>
             </div>
 
             <!-- Categories Management Section -->
@@ -225,33 +225,48 @@
             <div id="orders" class="content-section">
                 <div class="section-header">
                     <h2>Orders Management</h2>
-                    <p>View and manage all orders (feature coming soon)</p>
+                    <p>View and manage all orders</p>
                 </div>
-                <div class="admin-card">
-                    <p>Feature coming soon.</p>
+                <div class="admin-orders-tabs" style="display:flex;gap:1.5em;margin-bottom:2em;">
+                    <button id="adminTabOrdersPENDING" class="admin-orders-tab active" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#2563eb;padding:0.7em 0.5em;border-bottom:2.5px solid #2563eb;cursor:pointer;">Pending</button>
+                    <button id="adminTabOrdersRECEIVED" class="admin-orders-tab" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#888;padding:0.7em 0.5em;border-bottom:2.5px solid transparent;cursor:pointer;">Received</button>
+                    <button id="adminTabOrdersPREPARING" class="admin-orders-tab" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#888;padding:0.7em 0.5em;border-bottom:2.5px solid transparent;cursor:pointer;">Preparing</button>
+                    <button id="adminTabOrdersDELIVERING" class="admin-orders-tab" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#888;padding:0.7em 0.5em;border-bottom:2.5px solid transparent;cursor:pointer;">Delivering</button>
+                    <button id="adminTabOrdersDELIVERED" class="admin-orders-tab" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#888;padding:0.7em 0.5em;border-bottom:2.5px solid transparent;cursor:pointer;">Delivered</button>
+                    <button id="adminTabOrdersCANCELLED" class="admin-orders-tab" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#888;padding:0.7em 0.5em;border-bottom:2.5px solid transparent;cursor:pointer;">Cancelled</button>
                 </div>
+                <div class="admin-orders-container"></div>
             </div>
 
             <!-- Reviews Management Section -->
             <div id="reviews" class="content-section">
                 <div class="section-header">
                     <h2>Reviews Management</h2>
-                    <p>View and manage reviews (feature coming soon)</p>
+                    <p>View and manage reviews</p>
                 </div>
-                <div class="admin-card">
-                    <p>Feature coming soon.</p>
+                <div class="admin-reviews-tabs" style="display:flex;gap:1.5em;margin-bottom:2em;">
+                    <button id="adminTabGeneralReviews" class="admin-reviews-tab active" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#2563eb;padding:0.7em 0.5em;border-bottom:2.5px solid #2563eb;cursor:pointer;">General</button>
+                    <button id="adminTabItemReviews" class="admin-reviews-tab" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#888;padding:0.7em 0.5em;border-bottom:2.5px solid transparent;cursor:pointer;">Item</button>
+                    <button id="adminTabOrderReviews" class="admin-reviews-tab" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#888;padding:0.7em 0.5em;border-bottom:2.5px solid transparent;cursor:pointer;">Order</button>
                 </div>
+                <!-- Reviews will be rendered here by JS -->
             </div>
 
             <!-- Users Management Section -->
             <div id="users" class="content-section">
                 <div class="section-header">
                     <h2>Users Management</h2>
-                    <p>View and manage users (feature coming soon)</p>
+                    <p>View and manage users</p>
                 </div>
-                <div class="admin-card">
-                    <p>Feature coming soon.</p>
+                <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1em;">
+                    <div style="display: flex; align-items: center; gap: 0.5em; min-width: 340px; max-width: 420px; width: 100%;">
+                        <input id="adminUserSearchInput" type="text" class="form-control" placeholder="Search for a specific user" style="flex:1; font-size: 1.13em; padding: 0.7em 1em;">
+                        <button id="adminUserSearchBtn" class="btn btn-icon" type="button" style="background: #2563eb; color: #fff; border: none; border-radius: 4px; padding: 0.5em 0.8em; font-size: 1.25em; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
                 </div>
+                <div id="adminUsersList" style="margin-top:2em;"></div>
             </div>
         </main>
     </div>

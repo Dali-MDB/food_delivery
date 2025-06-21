@@ -75,7 +75,7 @@ def add_item_review(item_id:int,review: ReviewCreate,token: Annotated[str, Depen
     return review_db
 
 #get all reviews
-@reviews_router.get("/get_all_reviews/")
+@reviews_router.get("/get_all_reviews/",response_model=dict[review_type,list[ReviewDisplay]])
 def get_all_reviews(db:sessionDep):
     reviews = db.query(Review).all()
     reviews_list = {
@@ -147,3 +147,24 @@ def delete_review(review_id:int,token: Annotated[str, Depends(oauth2_scheme)],db
     db.delete(review_db)
     db.commit()
     return { "message": "Review deleted successfully" }
+
+
+
+
+
+#view reviews of a certain user
+@reviews_router.get('/view_user_reviews/{user_id}/',response_model=dict[review_type,list[ReviewDisplay]])
+def view_user_reviews(user_id:int,token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    user = current_user(token,db)
+    if not user.is_admin and user.id != user_id:
+        raise HTTPException(status_code=403, detail="You are not allowed to view this user's reviews")
+    reviews = db.query(Review).filter(Review.user_id == user_id).all()
+    reviews_list = {
+        review_type.GENERAL : [],
+        review_type.ITEM : [],
+        review_type.ORDER : []
+    }
+    for review in reviews:
+        reviews_list[review.type].append(review)
+    return reviews_list
+

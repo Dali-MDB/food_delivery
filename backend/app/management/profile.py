@@ -43,7 +43,7 @@ def get_all_users(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
     user = current_user(token,db)
     if not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="You are not authorized to view this page")
-    users = db.query(User).all()
+    users = db.query(User).filter(User.is_admin == False).all()
     return users
 
 
@@ -145,3 +145,38 @@ def all_admins(token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
     verify_permission(user)
     admins = db.query(User).filter(User.is_admin == True).all()
     return admins
+
+
+
+
+
+from sqlalchemy import or_
+#search for a specific user
+@profile_router.get('/search_user/',response_model=list[UserDisplay])
+def search_user(query:str,token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    user = current_user(token,db)
+    verify_permission(user)
+    #search using the query in email, name, phone
+    users = db.query(User).filter(
+        User.is_admin == False,
+        or_(
+            User.email.ilike(f"%{query}%"),
+            User.username.ilike(f"%{query}%"),
+            User.phone.ilike(f"%{query}%")
+        )
+    ).all()
+    print(users[0])
+    return users
+
+
+
+#view a user profile (admin and same user restricted access)
+@profile_router.get('/user/{user_id}/',response_model=UserDisplay)
+def view_user_profile(user_id:int,token:Annotated[str,Depends(oauth2_scheme)],db:sessionDep):
+    user = current_user(token,db)
+    if user.id != user_id and not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="You are not authorized to view this profile")
+    user_db = db.query(User).filter(User.id == user_id).first()
+    if user_db is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not found")
+    return user_db

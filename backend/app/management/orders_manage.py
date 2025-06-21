@@ -170,7 +170,7 @@ def confirm_order(
     order.address = address
     order.status = order_status.RECEIVED
     order.ordered_at = datetime.now()
-    
+    order.total_price = order.calculate_total
     db.commit()
     db.refresh(order)
     
@@ -277,7 +277,7 @@ def change_order_status(
     return {"success": "Order status updated successfully"}
 
 
-@order_router.get('/view_all_orders/')
+@order_router.get('/view_all_orders/',response_model=dict[order_status,list[OrderDisplay]])
 def view_all_orders(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: sessionDep

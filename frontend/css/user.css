@@ -1,0 +1,236 @@
+/* User Profile Page CSS - Modern Card Design */
+.user-profile-container {
+    width: 90%;
+    margin: 110px auto 3em auto;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(37,99,235,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+    padding: 2.5em 2em 2em 2em;
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+}
+.user-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1.7em;
+    margin-bottom: 0.5em;
+}
+.user-avatar-large {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #f1f5fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8em;
+    color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.07);
+}
+.user-profile-details h2 {
+    margin: 0 0 0.2em 0;
+    font-size: 2.1em;
+    font-weight: 600;
+    color: #222;
+    letter-spacing: 0.01em;
+}
+.user-profile-details .user-email {
+    color: #2563eb;
+    font-size: 1.08em;
+    margin-bottom: 0.2em;
+    font-weight: 500;
+}
+.user-profile-details .user-phone {
+    color: #888;
+    font-size: 1em;
+}
+.user-profile-section {
+    margin-top: 0.5em;
+    background: #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(37,99,235,0.04);
+    padding: 1.5em 1.2em 1.2em 1.2em;
+}
+.user-profile-section h3 {
+    font-size: 1.13em;
+    color: #2563eb;
+    margin-bottom: 0.7em;
+    font-weight: 600;
+}
+.user-profile-section ul {
+    padding-left: 1.2em;
+    margin-bottom: 2em;
+}
+.user-profile-section li {
+    margin-bottom: 0.5em;
+    color: #333;
+    font-size: 1.04em;
+    background: #fff;
+    border-radius: 7px;
+    box-shadow: 0 1px 3px rgba(37,99,235,0.04);
+    padding: 0.6em 1em;
+    margin-right: 0.5em;
+}
+.user-profile-section li:last-child {
+    margin-bottom: 0;
+}
+@media (max-width: 600px) {
+    .user-profile-container {
+        padding: 1.2em 0.5em 1.5em 0.5em;
+    }
+    .user-profile-header {
+        flex-direction: column;
+        gap: 0.7em;
+        align-items: flex-start;
+    }
+    .user-profile-details h2 {
+        font-size: 1.3em;
+    }
+    .user-profile-section {
+        padding: 1em 0.5em 0.7em 0.5em;
+    }
+}
+.orders-card-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2em;
+    margin-bottom: 2em;
+}
+.order-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.07);
+    padding: 1.2em 1.5em;
+    min-width: 220px;
+    max-width: 100%;
+    flex: 1 1 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7em;
+}
+.order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1.08em;
+}
+.order-id {
+    color: #2563eb;
+}
+.order-status.badge {
+    padding: 0.3em 0.8em;
+    border-radius: 8px;
+    font-size: 0.98em;
+    font-weight: 500;
+    color: #fff;
+    background: #888;
+    text-transform: capitalize;
+}
+.order-status.badge.received { background: #2563eb; }
+.order-status.badge.preparing { background: #f59e0b; }
+.order-status.badge.delivering { background: #10b981; }
+.order-status.badge.delivered { background: #059669; }
+.order-status.badge.cancelled { background: #dc2626; }
+.order-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    color: #333;
+    font-size: 0.98em;
+}
+@media (max-width: 700px) {
+    .orders-card-list {
+        flex-direction: column;
+        gap: 1em;
+    }
+    .order-card {
+        min-width: 0;
+        width: 100%;
+    }
+}
+.review-section {
+    margin-bottom: 2em;
+}
+.review-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(37,99,235,0.07);
+    padding: 1em 1.2em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+}
+.review-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+}
+.review-rating {
+    color: #f59e0b;
+    font-size: 1.1em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+.review-text {
+    color: #222;
+    font-size: 1.04em;
+    font-weight: 500;
+}
+.delete-review-btn {
+    background: none;
+    border: none;
+    color: #dc2626;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 0.3em 0.5em;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+.delete-review-btn:hover {
+    background: #fee2e2;
+}
+.item-info-btn {
+    background: none;
+    border: none;
+    color: #2563eb;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 0.3em 0.5em;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+.item-info-btn:hover {
+    background: #dbeafe;
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px);
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 90vw;
+    margin: 8vh auto;
+    padding: 2em 1.5em 1.5em 1.5em;
+    position: relative;
+    animation: modalSlideIn 0.2s ease;
+}
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-40px); }
+    to { opacity: 1; transform: translateY(0); }
+} 

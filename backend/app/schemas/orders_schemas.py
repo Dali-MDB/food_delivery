@@ -4,6 +4,8 @@ from .items_schemas import Item,ItemDisplay
 from app.models.orders import order_status
 from datetime import datetime
 
+
+
 from enum import Enum as PyEnum
 class order_status (str, PyEnum):
     PENDING = "PENDING"
@@ -54,6 +56,13 @@ class OrderDisplay(OrderBase):
     status : order_status
     calculate_total : float
     item_orders : List[ItemOrderDisplay]|None = []
+    total_price : float
+    username: str = Field(..., description="User's username")
+    email: str = Field(..., description="User's email")
+    phone: str = Field(..., description="User's phone number")
+
+    class Config:
+        from_attributes = True  # Note: it's orm_mode, not orm_model
 
 
 class Order(OrderBase):

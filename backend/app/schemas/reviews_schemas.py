@@ -24,6 +24,8 @@ class ReviewDisplay(ReviewBase):
     id: int
     user_id: int
     type: ReviewType
+    order_id: Optional[int] = None
+    item_id: Optional[int] = None
 
     
     class Config:
@@ -33,8 +35,8 @@ class GeneralReviewDisplay(ReviewDisplay):
     pass
 
 class OrderReviewDisplay(ReviewDisplay):
-    order_id: int
+    order_id: int | None = None
 
 class ItemReviewDisplay(ReviewDisplay):
-    item_id: int
+    item_id: int | None = None
 

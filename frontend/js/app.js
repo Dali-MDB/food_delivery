@@ -388,9 +388,11 @@ async function checkout(address) {
     try {
         console.log('Processing checkout with address:', address);
         
-        const response = await apiCall('/orders/confirm_order/', {
+        const response = await apiCall(`/orders/confirm_order/?address=${encodeURIComponent(address)}`, {
             method: 'POST',
-            body: JSON.stringify({ address })
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
         });
         
         console.log('Checkout response:', response);

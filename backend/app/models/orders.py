@@ -49,6 +49,7 @@ class Order(Base):
     address = Column(Text, nullable=True)  # Only required when order is confirmed
     ordered_at = Column(DateTime, nullable=True)  # Set when order is confirmed
     status = Column(Enum(order_status), default=order_status.PENDING)
+    total_price = Column(Numeric(10, 2),default=0)
 
     user = relationship('User', back_populates='orders')
     item_orders = relationship(ItemOrder, back_populates='order', cascade="all, delete-orphan")
@@ -61,6 +62,19 @@ class Order(Base):
             if item_order.total_price:
                 total += item_order.total_price
         return total
+    
+    @property
+    def username(self):
+        return self.user.username
+    
+    @property
+    def email(self):
+        return self.user.email
+    
+    @property
+    def phone(self):
+        return self.user.phone
+    
 
     @property
     def is_cart(self):

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - FoodExpress</title>
+
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/user.css">
+</head>
+<body>
+     <!-- Navigation -->
+     <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-utensils"></i>
+                <span>FoodExpress</span>
+            </div>
+            <a href="admin.html" id="adminBtn" class="btn btn-admin" style="display: none; text-decoration: none;"><i class='fas fa-shield-alt'></i> Admin</a>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="categories.html" class="nav-link">Menu</a>
+                <a href="orders.html" class="nav-link">Orders</a>
+                <a href="reviews.html" class="nav-link">Reviews</a>
+            </div>
+            <div class="nav-auth">
+                <button id="loginBtn" class="btn btn-outline">Login</button>
+                <button id="signupBtn" class="btn btn-primary">Sign Up</button>
+                <button id="logoutBtn" class="btn btn-outline" style="display: none;">Logout</button>
+                <button id="profileBtn" class="btn btn-primary" style="display: none;">Profile</button>
+            </div>
+            <div class="nav-cart">
+                <a href="cart.html" id="cartBtn" class="btn btn-cart" style="display: none; text-decoration: none;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cartCount">0</span>
+                </a>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="user-profile-container">
+            <div class="user-tabs" style="display: flex; gap: 1.5em; border-bottom: 2px solid #f1f5fa; margin-bottom: 2em;">
+                <button id="userTabProfile" class="user-tab-btn active" style="background:none; border:none; font-size:1.1em; font-weight:600; color:#2563eb; padding:0.7em 0.5em; border-bottom:2.5px solid #2563eb; cursor:pointer;">Profile</button>
+                <button id="userTabOrders" class="user-tab-btn" style="background:none; border:none; font-size:1.1em; font-weight:600; color:#888; padding:0.7em 0.5em; border-bottom:2.5px solid transparent; cursor:pointer;">Orders</button>
+                <button id="userTabReviews" class="user-tab-btn" style="background:none; border:none; font-size:1.1em; font-weight:600; color:#888; padding:0.7em 0.5em; border-bottom:2.5px solid transparent; cursor:pointer;">Reviews</button>
+            </div>
+            <div id="userProfileSection">
+                <div class="user-profile-header">
+                    <div class="user-avatar-large" id="userProfileAvatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-profile-details">
+                        <h2 id="userProfileUsername">Username</h2>
+                        <div class="user-email" id="userProfileEmail">user@email.com</div>
+                        <div class="user-phone" id="userProfilePhone">Phone: -</div>
+                    </div>
+                </div>
+            </div>
+            <div id="userOrdersSection" style="display:none;"></div>
+            <div id="userReviewsSection" style="display:none;"></div>
+        </div>
+    </main>
+
+    <script src="../js/user.js"></script>
+</body>
+</html> 

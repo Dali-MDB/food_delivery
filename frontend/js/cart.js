@@ -35,16 +35,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const address = document.getElementById('checkoutAddress').value;
-        const phone = document.getElementById('checkoutPhone').value;
-        const notes = document.getElementById('checkoutNotes').value;
 
         try {
             await checkout(address);
             showMessage('Order placed successfully!', 'success');
             closeModal(document.getElementById('checkoutModal'));
-            // Redirect to orders page
+            // Redirect to home page instead of orders page
             setTimeout(() => {
-                window.location.href = 'orders.html';
+                window.location.href = 'index.html';
             }, 2000);
         } catch (error) {
             console.error('Checkout error:', error);

@@ -7,12 +7,6 @@ document.addEventListener('submit', function(e) {
     e.preventDefault();
 }, true);
 
-document.addEventListener('click', function(e) {
-    if (e.target.tagName === 'A') {
-        e.preventDefault();
-    }
-}, true);
-
 async function checkAdminAccess() {
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
@@ -45,7 +39,8 @@ async function checkAdminAccess() {
 }
 
 const ORDER_STATUSES = ["RECEIVED", "PREPARING", "DELIVERING", "DELIVERED", "CANCELLED"];
-let allAdminOrders = [];
+let allAdminOrdersByStatus = { RECEIVED: [], PREPARING: [], DELIVERING: [], DELIVERED: [], CANCELLED: [] };
+let adminActiveOrderTab = 'RECEIVED';
 
 document.addEventListener('DOMContentLoaded', async function() {
     // Access restriction using backend endpoint
@@ -65,6 +60,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Fetch data for the section
             if (section === 'categories') fetchCategories();
             if (section === 'items') { fetchAllCategoriesForItems(); fetchAllItems(); }
+            if (section === 'add-admin') fetchAndDisplayAdmins();
+            if (section === 'users') fetchAndDisplayUsers();
+            if (section === 'reviews') fetchAndDisplayReviews();
+            if (section === 'orders') fetchAndDisplayOrders();
         });
     });
     // Restore last active section on page load
@@ -80,6 +79,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (lastSection === 'categories') fetchCategories();
         if (lastSection === 'items') { fetchAllCategoriesForItems(); fetchAllItems(); }
         if (lastSection === 'add-admin') fetchAndDisplayAdmins();
+        if (lastSection === 'users') fetchAndDisplayUsers();
+        if (lastSection === 'reviews') fetchAndDisplayReviews();
+        if (lastSection === 'orders') fetchAndDisplayOrders();
     }
     // Set admin info in sidebar (if available)
     try {
@@ -99,31 +101,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchAndDisplayOrders() {
         const authToken = localStorage.getItem('authToken');
         if (!authToken) return;
+        renderAdminOrdersSection();
+        const container = document.querySelector('.admin-orders-container');
+        container.innerHTML = '<div style="color:#2563eb;">Loading orders...</div>';
         try {
-            const response = await fetch('http://localhost:8000/orders/view_all_orders/', {
+            const res = await fetch('http://localhost:8000/orders/view_all_orders/', {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
-            if (!response.ok) throw new Error('Failed to fetch orders');
-            const ordersByStatus = await response.json();
-            // Flatten and sort by date (newest first)
-            allAdminOrders = [];
-            for (const status of ORDER_STATUSES) {
-                if (ordersByStatus[status]) {
-                    allAdminOrders = allAdminOrders.concat(ordersByStatus[status]);
-                }
-            }
-            allAdminOrders.sort((a, b) => new Date(b.ordered_at) - new Date(a.ordered_at));
-            displayOrders();
-        } catch (err) {
-            ordersTableBody.innerHTML = `<tr><td colspan="6">Failed to load orders</td></tr>`;
+            if (!res.ok) throw new Error('Failed to fetch orders');
+            const ordersByStatus = await res.json();
+            allAdminOrdersByStatus = ordersByStatus;
+            renderAdminOrders(container);
+        } catch {
+            container.innerHTML = '<div style="color:#e74c3c;">Failed to load orders.</div>';
         }
     }
 
     function displayOrders() {
         const filter = statusFilter.value;
-        let filtered = allAdminOrders;
+        let filtered = allAdminOrdersByStatus[filter] || [];
         if (filter !== 'all') {
-            filtered = allAdminOrders.filter(order => order.status === filter);
+            filtered = allAdminOrdersByStatus[filter];
         }
         if (!filtered.length) {
             ordersTableBody.innerHTML = `<tr><td colspan="6">No orders found</td></tr>`;
@@ -632,7 +630,7 @@ addItemForm.onsubmit = async function(e) {
     hideAdminItemModal();
     await fetchAllItems();
     // Check if the item appears in the refreshed list
-    const found = allItems.some(item => item.name === name && parseFloat(item.price) === price);
+    const found = Array.isArray(allItems) && allItems.some(item => item.name === name);
     if (addError && !found) {
         alert('Failed to add item. Please try again.');
     } else if (addError && found) {
@@ -827,4 +825,650 @@ if (addAdminForm) {
         await origSubmit.call(this, e);
         fetchAndDisplayAdmins();
     };
+}
+
+// === Users List Logic ===
+const adminUsersList = document.getElementById('adminUsersList');
+const adminUserSearchInput = document.getElementById('adminUserSearchInput');
+const adminUserSearchBtn = document.getElementById('adminUserSearchBtn');
+let userSearchTimeout = null;
+
+async function searchAndDisplayUsers(query) {
+    if (!adminUsersList) return;
+    const authToken = localStorage.getItem('authToken');
+    adminUsersList.innerHTML = '<div class="admin-empty-message">Searching users...</div>';
+    try {
+        const response = await fetch(`http://localhost:8000/profile/search_user/?query=${encodeURIComponent(query)}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) throw new Error('Failed to search users');
+        const users = await response.json();
+        if (!users.length) {
+            adminUsersList.innerHTML = '<div class="admin-empty-message">No users found.</div>';
+            return;
+        }
+        adminUsersList.innerHTML = users.map(user => `
+            <div class="admin-card" style="display: flex; align-items: center; gap: 1.5em; padding: 1em 1.5em; margin-bottom: 0.5em;">
+                <div style="font-size: 1.7em; color: #2563eb;"><i class="fas fa-user"></i></div>
+                <div style="flex:1;">
+                    <div style="font-weight: 600; font-size: 1.1rem;">${user.username}</div>
+                    <div style="color: #555; font-size: 0.98em;">${user.email}</div>
+                </div>
+                <button class="btn btn-icon view-user-profile-btn" data-user-id="${user.id}" title="View Profile" style="margin-left:auto; font-size:1.3em; color:#2563eb; background:none; border:none; cursor:pointer;">
+                    <i class="fas fa-id-card"></i>
+                </button>
+            </div>
+        `).join('');
+        // Add event listeners to view profile buttons
+        document.querySelectorAll('.view-user-profile-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                window.location.href = `user.html?id=${userId}`;
+            });
+        });
+    } catch (err) {
+        adminUsersList.innerHTML = '<div class="admin-empty-message">Failed to search users.<br>Try again.</div>';
+    }
+}
+
+if (adminUserSearchBtn && adminUserSearchInput) {
+    adminUserSearchBtn.addEventListener('click', function() {
+        const query = adminUserSearchInput.value.trim();
+        if (query) {
+            searchAndDisplayUsers(query);
+        } else {
+            fetchAndDisplayUsers();
+        }
+    });
+}
+
+async function fetchAndDisplayUsers() {
+    if (!adminUsersList) return;
+    const authToken = localStorage.getItem('authToken');
+    adminUsersList.innerHTML = '<div class="admin-empty-message">Loading users...</div>';
+    try {
+        const response = await fetch('http://localhost:8000/profile/all_users/', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch users');
+        const users = await response.json();
+        if (!users.length) {
+            adminUsersList.innerHTML = '<div class="admin-empty-message">No users found.</div>';
+            return;
+        }
+        adminUsersList.innerHTML = users.map(user => `
+            <div class="admin-card" style="display: flex; align-items: center; gap: 1.5em; padding: 1em 1.5em; margin-bottom: 0.5em;">
+                <div style="font-size: 1.7em; color: #2563eb;"><i class="fas fa-user"></i></div>
+                <div style="flex:1;">
+                    <div style="font-weight: 600; font-size: 1.1rem;">${user.username}</div>
+                    <div style="color: #555; font-size: 0.98em;">${user.email}</div>
+                </div>
+                <button class="btn btn-icon view-user-profile-btn" data-user-id="${user.id}" title="View Profile" style="margin-left:auto; font-size:1.3em; color:#2563eb; background:none; border:none; cursor:pointer;">
+                    <i class="fas fa-id-card"></i>
+                </button>
+            </div>
+        `).join('');
+        // Add event listeners to view profile buttons
+        document.querySelectorAll('.view-user-profile-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                window.location.href = `user.html?id=${userId}`;
+            });
+        });
+    } catch (err) {
+        adminUsersList.innerHTML = '<div class="admin-empty-message">Failed to load users.<br>Try refreshing the page.</div>';
+    }
+}
+
+// Fetch users when Users section is shown
+const usersSectionLink = document.querySelector('.sidebar-link[data-section="users"]');
+if (usersSectionLink) {
+    usersSectionLink.addEventListener('click', fetchAndDisplayUsers);
+}
+// Also fetch on page load if Users is the active section
+if (document.getElementById('users')?.classList.contains('active')) {
+    fetchAndDisplayUsers();
+}
+
+// === Reviews Management ===
+const reviewsSection = document.getElementById('reviews');
+let allAdminReviews = { general: [], item_review: [], order_review: [] };
+let adminActiveReviewTab = 'general';
+
+function renderAdminReviewsSection() {
+    if (!reviewsSection) return;
+    reviewsSection.innerHTML = `
+        <div class="section-header">
+            <h2>Reviews Management</h2>
+            <p>View and manage reviews</p>
+        </div>
+        <div class="admin-reviews-tabs" style="display:flex;gap:1.5em;margin-bottom:2em;">
+            <button id="adminTabGeneralReviews" class="admin-reviews-tab${adminActiveReviewTab === 'general' ? ' active' : ''}" style="background:none;border:none;font-size:1.1em;font-weight:600;color:${adminActiveReviewTab === 'general' ? '#2563eb' : '#888'};padding:0.7em 0.5em;border-bottom:2.5px solid ${adminActiveReviewTab === 'general' ? '#2563eb' : 'transparent'};cursor:pointer;">General</button>
+            <button id="adminTabItemReviews" class="admin-reviews-tab${adminActiveReviewTab === 'item' ? ' active' : ''}" style="background:none;border:none;font-size:1.1em;font-weight:600;color:${adminActiveReviewTab === 'item' ? '#2563eb' : '#888'};padding:0.7em 0.5em;border-bottom:2.5px solid ${adminActiveReviewTab === 'item' ? '#2563eb' : 'transparent'};cursor:pointer;">Item</button>
+            <button id="adminTabOrderReviews" class="admin-reviews-tab${adminActiveReviewTab === 'order' ? ' active' : ''}" style="background:none;border:none;font-size:1.1em;font-weight:600;color:${adminActiveReviewTab === 'order' ? '#2563eb' : '#888'};padding:0.7em 0.5em;border-bottom:2.5px solid ${adminActiveReviewTab === 'order' ? '#2563eb' : 'transparent'};cursor:pointer;">Order</button>
+        </div>
+        <div class="admin-reviews-container"></div>
+    `;
+    setupAdminReviewsTabs();
+}
+
+async function fetchAndDisplayReviews() {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) return;
+    if (!reviewsSection) return;
+    renderAdminReviewsSection();
+    const container = document.querySelector('.admin-reviews-container');
+    container.innerHTML = '<div style="color:#2563eb;">Loading reviews...</div>';
+    try {
+        const res = await fetch('http://localhost:8000/reviews/get_all_reviews/', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch reviews');
+        allAdminReviews = await res.json();
+        renderAdminReviews(container);
+    } catch {
+        container.innerHTML = '<div style="color:#e74c3c;">Failed to load reviews.</div>';
+    }
+}
+
+let adminUserCache = {};
+
+async function getUserInfo(userId) {
+    if (adminUserCache[userId]) return adminUserCache[userId];
+    const authToken = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`http://localhost:8000/profile/user/${userId}/`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch user info');
+        const user = await res.json();
+        adminUserCache[userId] = user;
+        return user;
+    } catch {
+        return null;
+    }
+}
+
+async function renderAdminReviews(container) {
+    let html = '';
+    function reviewCard(review, type, user) {
+        let itemBtn = '';
+        if (type === 'item_review' && review.item_id) {
+            itemBtn = `<button class=\"item-info-btn\" onclick=\"adminShowItemInfo(${review.item_id})\" title=\"View Item Info\"><i class='fas fa-info-circle'></i> <span style=\"font-size:0.98em; font-weight:500; color:#2563eb; margin-left:0.3em;\">View Item</span></button>`;
+        }
+        let userInfo = '';
+        if (user) {
+            userInfo = `<div class=\"review-user\" style=\"color:#888; font-size:0.97em; margin-left:0.7em;\">Name: ${user.name || user.username || '-'}<br>Username: ${user.username || '-'}<br>Phone: ${user.phone || '-'}</div>`;
+        } else {
+            userInfo = `<div class=\"review-user\" style=\"color:#888; font-size:0.97em; margin-left:0.7em;\">User: ${review.user_id}</div>`;
+        }
+        return `<div class=\"review-card\">
+            <div class=\"review-content\">
+                <span class=\"review-rating\">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</span>
+                <span class=\"review-text\">${review.content}</span>
+                ${userInfo}
+            </div>
+            <div style=\"display:flex;align-items:center;gap:0.5em;\">${itemBtn}<button class=\"delete-review-btn\" title=\"Delete Review\" onclick=\"adminDeleteReview(${review.id})\"><i class='fas fa-trash'></i></button></div>
+        </div>`;
+    }
+    let hasAny = false;
+    let tabType = adminActiveReviewTab;
+    let reviewsArr = [];
+    let tabTitle = '';
+    if (tabType === 'general') {
+        reviewsArr = allAdminReviews.general || [];
+        tabTitle = 'General Reviews';
+    } else if (tabType === 'item') {
+        reviewsArr = allAdminReviews.item_review || [];
+        tabTitle = 'Item Reviews';
+    } else if (tabType === 'order') {
+        reviewsArr = allAdminReviews.order_review || [];
+        tabTitle = 'Order Reviews';
+    }
+    if (reviewsArr.length) {
+        hasAny = true;
+        html += `<div class=\"review-section\"><h4 style=\"color:#2563eb; margin-top:1em;\">${tabTitle}</h4>`;
+        html += reviewsArr.map(r => '<div class="admin-review-loading">Loading user info...</div>').join('');
+    }
+    if (!hasAny) {
+        html += '<div style="color:#888;">No reviews found.</div>';
+    }
+    container.innerHTML = html;
+    // Now fetch user info and update each review card
+    if (reviewsArr.length) {
+        reviewsArr.forEach(async (review, idx) => {
+            const user = await getUserInfo(review.user_id);
+            const reviewHtml = reviewCard(review, tabType === 'item' ? 'item_review' : tabType === 'order' ? 'order_review' : 'general', user);
+            const reviewEls = container.getElementsByClassName('admin-review-loading');
+            if (reviewEls[idx]) reviewEls[idx].outerHTML = reviewHtml;
+        });
+    }
+}
+
+// Tab switching logic
+function setupAdminReviewsTabs() {
+    const tabGeneral = document.getElementById('adminTabGeneralReviews');
+    const tabItem = document.getElementById('adminTabItemReviews');
+    const tabOrder = document.getElementById('adminTabOrderReviews');
+    if (!tabGeneral || !tabItem || !tabOrder) return;
+    tabGeneral.onclick = () => switchAdminReviewTab('general');
+    tabItem.onclick = () => switchAdminReviewTab('item');
+    tabOrder.onclick = () => switchAdminReviewTab('order');
+}
+function switchAdminReviewTab(tab) {
+    adminActiveReviewTab = tab;
+    renderAdminReviewsSection();
+    const container = document.querySelector('.admin-reviews-container');
+    renderAdminReviews(container);
+}
+
+window.adminDeleteReview = async function(reviewId) {
+    if (!confirm('Are you sure you want to delete this review?')) return;
+    const authToken = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`http://localhost:8000/reviews/delete_review/${reviewId}/`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            fetchAndDisplayReviews();
+        } else {
+            alert('Failed to delete review.');
+        }
+    } catch {
+        alert('Failed to delete review.');
+    }
+}
+
+window.adminShowItemInfo = async function(itemId) {
+    let modal = document.getElementById('itemInfoModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'itemInfoModal';
+        modal.className = 'modal';
+        modal.innerHTML = `<div class='modal-content' id='itemInfoModalContent'></div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) adminHideItemInfo();
+        });
+    }
+    const content = document.getElementById('itemInfoModalContent');
+    content.innerHTML = '<div style="padding:2em;text-align:center;color:#2563eb;">Loading item info...</div>';
+    modal.style.display = 'block';
+    const authToken = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`http://localhost:8000/items/${itemId}/view/`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch item info');
+        const item = await res.json();
+        content.innerHTML = `<div style='padding:1.5em 1em;'>
+            <h2 style='color:#2563eb;margin-bottom:0.5em;'>${item.name}</h2>
+            <div style='color:#555;margin-bottom:0.7em;'>${item.description || ''}</div>
+            <div style='color:#059669;font-weight:600;margin-bottom:0.7em;'>Price: $${parseFloat(item.price).toFixed(2)}</div>
+            <div style='color:#888;'>Category: ${item.category_name || '-'}</div>
+            <button onclick='adminHideItemInfo()' class='btn btn-outline' style='margin-top:1.5em;'>Close</button>
+        </div>`;
+    } catch {
+        content.innerHTML = `<div style='padding:2em;text-align:center;color:#e74c3c;'>Failed to load item info.</div><button onclick='adminHideItemInfo()' class='btn btn-outline' style='margin-top:1.5em;'>Close</button>`;
+    }
+}
+window.adminHideItemInfo = function() {
+    const modal = document.getElementById('itemInfoModal');
+    if (modal) modal.style.display = 'none';
+}
+// Bind reviews section to sidebar
+const reviewsSidebarLink = document.querySelector('.sidebar-link[data-section="reviews"]');
+if (reviewsSidebarLink) {
+    reviewsSidebarLink.addEventListener('click', fetchAndDisplayReviews);
+}
+
+function renderAdminOrdersSection() {
+    const ordersSection = document.getElementById('orders');
+    if (!ordersSection) return;
+    ordersSection.innerHTML = `
+        <div class="section-header">
+            <h2>Orders Management</h2>
+            <p>View and manage all orders</p>
+        </div>
+        <div class="admin-orders-tabs" style="display:flex;gap:1.5em;margin-bottom:2em;">
+            ${ORDER_STATUSES.map(status =>
+                `<button id="adminTabOrders${status}" class="admin-orders-tab${adminActiveOrderTab === status ? ' active' : ''}" style="background:none;border:none;font-size:1.1em;font-weight:600;color:${adminActiveOrderTab === status ? '#2563eb' : '#888'};padding:0.7em 0.5em;border-bottom:2.5px solid ${adminActiveOrderTab === status ? '#2563eb' : 'transparent'};cursor:pointer;">${status.charAt(0) + status.slice(1).toLowerCase()}</button>`
+            ).join('')}
+        </div>
+        <div class="admin-orders-container"></div>
+    `;
+    setupAdminOrdersTabs();
+}
+
+async function fetchAndDisplayOrders() {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) return;
+    renderAdminOrdersSection();
+    const container = document.querySelector('.admin-orders-container');
+    container.innerHTML = '<div style="color:#2563eb;">Loading orders...</div>';
+    try {
+        const res = await fetch('http://localhost:8000/orders/view_all_orders/', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch orders');
+        const ordersByStatus = await res.json();
+        allAdminOrdersByStatus = ordersByStatus;
+        renderAdminOrders(container);
+    } catch {
+        container.innerHTML = '<div style="color:#e74c3c;">Failed to load orders.</div>';
+    }
+}
+
+function renderAdminOrders(container) {
+    let html = '';
+    const status = adminActiveOrderTab;
+    const orders = allAdminOrdersByStatus[status] || [];
+    
+    if (orders.length) {
+        html += `
+            <div class="admin-orders-table">
+                <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background:#f8f9fa;border-bottom:2px solid #dee2e6;">
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#374151;">Order ID</th>
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#374151;">Customer</th>
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#374151;">Address</th>
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#374151;">Date</th>
+                            <th style="padding:12px;text-align:center;font-weight:600;color:#374151;">Status</th>
+                            <th style="padding:12px;text-align:right;font-weight:600;color:#374151;">Total</th>
+                            <th style="padding:12px;text-align:center;font-weight:600;color:#374151;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orders.map(order => {
+                            // Check if order can be cancelled
+                            const canCancel = order.status !== 'PENDING' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED';
+                            
+                            return `
+                                <tr style="border-bottom:1px solid #f3f4f6;">
+                                    <td style="padding:12px;text-align:left;font-weight:600;color:#1f2937;">#${order.id}</td>
+                                    <td style="padding:12px;text-align:left;">
+                                        <div style="font-weight:600;color:#1f2937;">${order.username || 'N/A'}</div>
+                                        <div style="font-size:0.875rem;color:#6b7280;">${order.email || 'N/A'}</div>
+                                        <div style="font-size:0.875rem;color:#6b7280;">${order.phone || 'N/A'}</div>
+                                    </td>
+                                    <td style="padding:12px;text-align:left;color:#6b7280;max-width:200px;word-wrap:break-word;">
+                                        ${order.address || 'N/A'}
+                                    </td>
+                                    <td style="padding:12px;text-align:left;color:#6b7280;">
+                                        ${order.ordered_at ? new Date(order.ordered_at).toLocaleString() : 'N/A'}
+                                    </td>
+                                    <td style="padding:12px;text-align:center;">
+                                        <span class="badge badge-${order.status.toLowerCase()}">${order.status}</span>
+                                    </td>
+                                    <td style="padding:12px;text-align:right;font-weight:600;color:#059669;">
+                                        $${order.calculate_total ? parseFloat(order.calculate_total).toFixed(2) : '0.00'}
+                                    </td>
+                                    <td style="padding:12px;text-align:center;">
+                                        <div style="display:flex;gap:0.25rem;justify-content:center;align-items:center;">
+                                            <button class="btn btn-outline btn-xs" onclick="viewOrderDetails(${order.id})" title="View Order Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-primary btn-xs" onclick="showStatusChangeModal(${order.id}, '${order.status}')" title="Change Status">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            ${canCancel ? `
+                                                <button class="btn btn-danger btn-xs" onclick="cancelOrder(${order.id})" title="Cancel Order">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        html += '<div style="color:#888;text-align:center;padding:2em;">No orders found for this status.</div>';
+    }
+    container.innerHTML = html;
+}
+
+function setupAdminOrdersTabs() {
+    ORDER_STATUSES.forEach(status => {
+        const btn = document.getElementById(`adminTabOrders${status}`);
+        if (btn) {
+            btn.onclick = () => switchAdminOrderTab(status);
+        }
+    });
+}
+function switchAdminOrderTab(status) {
+    adminActiveOrderTab = status;
+    renderAdminOrdersSection();
+    const container = document.querySelector('.admin-orders-container');
+    renderAdminOrders(container);
+}
+// Bind orders section to sidebar
+const ordersSidebarLink = document.querySelector('.sidebar-link[data-section="orders"]');
+if (ordersSidebarLink) {
+    ordersSidebarLink.addEventListener('click', fetchAndDisplayOrders);
+}
+// On page load, if orders is active, load orders
+if (document.getElementById('orders')?.classList.contains('active')) {
+    fetchAndDisplayOrders();
+}
+
+// === Order Management Functions ===
+
+// View order details with item orders
+window.viewOrderDetails = async function(orderId) {
+    let modal = document.getElementById('orderDetailsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'orderDetailsModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                <button class="btn btn-secondary" onclick="hideOrderDetailsModal()" style="position: absolute; top: 12px; right: 18px; z-index: 2;">&times;</button>
+                <div id="orderDetailsContent"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) hideOrderDetailsModal();
+        });
+    }
+    
+    const content = document.getElementById('orderDetailsContent');
+    content.innerHTML = '<div style="padding:2em;text-align:center;color:#2563eb;">Loading order details...</div>';
+    modal.style.display = 'block';
+    
+    const authToken = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`http://localhost:8000/orders/view_order/${orderId}/`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch order details');
+        const order = await res.json();
+        
+        let itemsHtml = '';
+        if (order.item_orders && order.item_orders.length > 0) {
+            itemsHtml = `
+                <div class="order-items-section">
+                    <h3 style="color:#2563eb;margin-bottom:1em;">Order Items</h3>
+                    <div class="order-items-table">
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#f8f9fa;border-bottom:2px solid #dee2e6;">
+                                    <th style="padding:12px;text-align:left;border-bottom:1px solid #dee2e6;">Item</th>
+                                    <th style="padding:12px;text-align:center;border-bottom:1px solid #dee2e6;">Quantity</th>
+                                    <th style="padding:12px;text-align:right;border-bottom:1px solid #dee2e6;">Unit Price</th>
+                                    <th style="padding:12px;text-align:right;border-bottom:1px solid #dee2e6;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${order.item_orders.map(item => `
+                                    <tr style="border-bottom:1px solid #f1f3f4;">
+                                        <td style="padding:12px;text-align:left;">
+                                            <div style="font-weight:600;">${item.item_name}</div>
+                                        </td>
+                                        <td style="padding:12px;text-align:center;">${item.quantity}</td>
+                                        <td style="padding:12px;text-align:right;">$${(item.total_price / item.quantity).toFixed(2)}</td>
+                                        <td style="padding:12px;text-align:right;font-weight:600;">$${parseFloat(item.total_price).toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } else {
+            itemsHtml = '<div style="color:#888;text-align:center;padding:1em;">No items found in this order.</div>';
+        }
+        
+        content.innerHTML = `
+            <div style="padding:1.5em;">
+                <h2 style="color:#2563eb;margin-bottom:1em;">Order #${order.id} Details</h2>
+                
+                <div class="order-info-section" style="margin-bottom:2em;">
+                    <h3 style="color:#2563eb;margin-bottom:0.5em;">Order Information</h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1em;background:#f8f9fa;padding:1em;border-radius:8px;">
+                        <div><strong>Status:</strong> <span class="badge badge-${order.status.toLowerCase()}">${order.status}</span></div>
+                        <div><strong>Order Date:</strong> ${order.ordered_at ? new Date(order.ordered_at).toLocaleString() : 'N/A'}</div>
+                        <div><strong>Delivery Address:</strong> ${order.address || 'N/A'}</div>
+                        <div><strong>Total Amount:</strong> <span style="font-weight:600;color:#059669;">$${parseFloat(order.calculate_total).toFixed(2)}</span></div>
+                    </div>
+                </div>
+                
+                ${itemsHtml}
+                
+                <div style="display:flex;justify-content:flex-end;margin-top:2em;">
+                    <button onclick="hideOrderDetailsModal()" class="btn btn-outline">Close</button>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        content.innerHTML = `
+            <div style="padding:2em;text-align:center;color:#e74c3c;">
+                Failed to load order details: ${error.message}
+            </div>
+            <div style="display:flex;justify-content:center;margin-top:1em;">
+                <button onclick="hideOrderDetailsModal()" class="btn btn-outline">Close</button>
+            </div>
+        `;
+    }
+}
+
+window.hideOrderDetailsModal = function() {
+    const modal = document.getElementById('orderDetailsModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Show status change modal
+window.showStatusChangeModal = function(orderId, currentStatus) {
+    let modal = document.getElementById('statusChangeModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'statusChangeModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <button class="btn btn-secondary" onclick="hideStatusChangeModal()" style="position: absolute; top: 12px; right: 18px; z-index: 2;">&times;</button>
+                <div id="statusChangeContent"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) hideStatusChangeModal();
+        });
+    }
+    
+    const content = document.getElementById('statusChangeContent');
+    const availableStatuses = ORDER_STATUSES.filter(status => status !== 'PENDING' && status !== currentStatus);
+    
+    content.innerHTML = `
+        <div style="padding:1.5em;">
+            <h3 style="color:#2563eb;margin-bottom:1em;">Change Order Status</h3>
+            <p style="margin-bottom:1em;">Current Status: <span class="badge badge-${currentStatus.toLowerCase()}">${currentStatus}</span></p>
+            
+            <form id="statusChangeForm" style="display:flex;flex-direction:column;gap:1em;">
+                <div>
+                    <label for="newStatus" style="display:block;margin-bottom:0.5em;font-weight:600;">New Status:</label>
+                    <select id="newStatus" required class="form-control">
+                        <option value="">Select new status...</option>
+                        ${availableStatuses.map(status => 
+                            `<option value="${status}">${status.charAt(0) + status.slice(1).toLowerCase()}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div style="display:flex;gap:1em;justify-content:flex-end;margin-top:1em;">
+                    <button type="button" onclick="hideStatusChangeModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+    
+    // Handle form submission
+    document.getElementById('statusChangeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const newStatus = document.getElementById('newStatus').value;
+        if (!newStatus) return;
+        
+        await changeOrderStatus(orderId, newStatus);
+        hideStatusChangeModal();
+    });
+}
+
+window.hideStatusChangeModal = function() {
+    const modal = document.getElementById('statusChangeModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Cancel order function
+window.cancelOrder = async function(orderId) {
+    if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+        return;
+    }
+    
+    const authToken = localStorage.getItem('authToken');
+    try {
+        const response = await fetch(`http://localhost:8000/orders/cancel_order/${orderId}/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to cancel order');
+        }
+        
+        alert('Order cancelled successfully!');
+        await fetchAndDisplayOrders(); // Refresh the orders list
+    } catch (error) {
+        alert(`Failed to cancel order: ${error.message}`);
+    }
+}
+
+// Update the existing changeOrderStatus function to show better feedback
+async function changeOrderStatus(orderId, newStatus) {
+    const authToken = localStorage.getItem('authToken');
+    try {
+        const response = await fetch(`http://localhost:8000/orders/change_order_status/${orderId}/?new_status=${newStatus}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to update status');
+        }
+        
+        alert('Order status updated successfully!');
+        await fetchAndDisplayOrders(); // Refresh the orders list
+    } catch (error) {
+        alert(`Failed to update order status: ${error.message}`);
+    }
 } 
