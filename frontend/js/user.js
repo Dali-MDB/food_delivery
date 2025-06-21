@@ -82,34 +82,152 @@ async function renderOrdersSection() {
         });
         let ordersByStatus = { RECEIVED: [], PREPARING: [], DELIVERING: [], DELIVERED: [], CANCELLED: [] };
         if (ordersRes.ok) ordersByStatus = await ordersRes.json();
-        let html = '<h3 style="margin-bottom:0.5em; color:#2563eb;">Orders</h3>';
-        let hasAny = false;
-        for (const status of ["RECEIVED", "PREPARING", "DELIVERING", "DELIVERED", "CANCELLED"]) {
-            const orders = ordersByStatus[status] || [];
-            if (orders.length) {
-                hasAny = true;
-                html += `<h4 style=\"color:#2563eb; margin-top:1em;\">${status.charAt(0) + status.slice(1).toLowerCase()} Orders</h4>`;
-                html += '<div class="orders-card-list">' +
-                    orders.map(order =>
-                        `<div class="order-card">
-                            <div class="order-card-header">
-                                <span class="order-id">Order #${order.id}</span>
-                                <span class="order-status badge badge-${status.toLowerCase()}">${order.status}</span>
-                            </div>
-                            <div class="order-card-body">
-                                <div><i class='fas fa-map-marker-alt'></i> <span>${order.address ? order.address : '-'}</span></div>
-                                <div><i class='fas fa-calendar'></i> <span>${order.ordered_at ? new Date(order.ordered_at).toLocaleString() : '-'}</span></div>
-                            </div>
-                        </div>`
-                    ).join('') + '</div>';
-            }
-        }
-        if (!hasAny) {
-            html += '<div style="color:#888;">No orders found.</div>';
-        }
+        
+        // Create the orders section with tabs
+        let html = `
+            <div class="user-orders-container">
+                <h3 style="margin-bottom:1em; color:#2563eb;">Orders</h3>
+                <div class="user-orders-tabs" style="display:flex;gap:1.5em;margin-bottom:2em;">
+                    ${["RECEIVED", "PREPARING", "DELIVERING", "DELIVERED", "CANCELLED"].map(status =>
+                        `<button id="userTabOrders${status}" class="user-orders-tab" style="background:none;border:none;font-size:1.1em;font-weight:600;color:#888;padding:0.7em 0.5em;border-bottom:2.5px solid transparent;cursor:pointer;">${status.charAt(0) + status.slice(1).toLowerCase()}</button>`
+                    ).join('')}
+                </div>
+                <div id="userOrdersTableContainer"></div>
+            </div>
+        `;
+        
         sectionOrders.innerHTML = html;
+        
+        // Set up tab functionality and render initial orders
+        setupUserOrdersTabs(ordersByStatus);
+        renderUserOrdersTable(ordersByStatus, 'RECEIVED'); // Default to RECEIVED tab
+        
     } catch {
-        sectionOrders.innerHTML = '<div style=\"color:#e74c3c;\">Failed to load orders.</div>';
+        sectionOrders.innerHTML = '<div style="color:#e74c3c;">Failed to load orders.</div>';
+    }
+}
+
+// Set up user orders tabs
+function setupUserOrdersTabs(ordersByStatus) {
+    const ORDER_STATUSES = ["RECEIVED", "PREPARING", "DELIVERING", "DELIVERED", "CANCELLED"];
+    
+    ORDER_STATUSES.forEach(status => {
+        const btn = document.getElementById(`userTabOrders${status}`);
+        if (btn) {
+            btn.onclick = () => switchUserOrderTab(status, ordersByStatus);
+        }
+    });
+    
+    // Set RECEIVED as active by default
+    const receivedBtn = document.getElementById('userTabOrdersRECEIVED');
+    if (receivedBtn) {
+        receivedBtn.style.color = '#2563eb';
+        receivedBtn.style.borderBottom = '2.5px solid #2563eb';
+    }
+}
+
+// Switch user order tab
+function switchUserOrderTab(status, ordersByStatus) {
+    // Update tab styles
+    const ORDER_STATUSES = ["RECEIVED", "PREPARING", "DELIVERING", "DELIVERED", "CANCELLED"];
+    ORDER_STATUSES.forEach(s => {
+        const btn = document.getElementById(`userTabOrders${s}`);
+        if (btn) {
+            btn.style.color = '#888';
+            btn.style.borderBottom = '2.5px solid transparent';
+        }
+    });
+    
+    const activeBtn = document.getElementById(`userTabOrders${status}`);
+    if (activeBtn) {
+        activeBtn.style.color = '#2563eb';
+        activeBtn.style.borderBottom = '2.5px solid #2563eb';
+    }
+    
+    // Render orders for selected status
+    renderUserOrdersTable(ordersByStatus, status);
+}
+
+// Render user orders table
+function renderUserOrdersTable(ordersByStatus, status) {
+    const container = document.getElementById('userOrdersTableContainer');
+    const orders = ordersByStatus[status] || [];
+    
+    if (orders.length) {
+        let html = `
+            <div class="user-orders-table">
+                <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background:#f8f9fa;border-bottom:2px solid #dee2e6;">
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#374151;">Order ID</th>
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#374151;">Customer</th>
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#374151;">Address</th>
+                            <th style="padding:12px;text-align:left;font-weight:600;color:#374151;">Date</th>
+                            <th style="padding:12px;text-align:center;font-weight:600;color:#374151;">Status</th>
+                            <th style="padding:12px;text-align:right;font-weight:600;color:#374151;">Total</th>
+                            <th style="padding:12px;text-align:center;font-weight:600;color:#374151;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orders.map(order => {
+                            // Check if order can be cancelled
+                            const canCancel = order.status !== 'PENDING' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED';
+                            
+                            return `
+                                <tr style="border-bottom:1px solid #f3f4f6;">
+                                    <td style="padding:12px;text-align:left;font-weight:600;color:#1f2937;">#${order.id}</td>
+                                    <td style="padding:12px;text-align:left;color:#6b7280;">
+                                        <div style="font-weight:500;color:#1f2937;">${order.username || 'N/A'}</div>
+                                        <div style="font-size:0.85em;color:#9ca3af;">${order.email || 'N/A'}</div>
+                                        <div style="font-size:0.85em;color:#9ca3af;">${order.phone || 'N/A'}</div>
+                                    </td>
+                                    <td style="padding:12px;text-align:left;color:#6b7280;max-width:200px;word-wrap:break-word;">
+                                        ${order.address || 'N/A'}
+                                    </td>
+                                    <td style="padding:12px;text-align:left;color:#6b7280;">
+                                        ${order.ordered_at ? new Date(order.ordered_at).toLocaleString() : 'N/A'}
+                                    </td>
+                                    <td style="padding:12px;text-align:center;">
+                                        <span class="badge badge-${order.status.toLowerCase()}">${order.status}</span>
+                                    </td>
+                                    <td style="padding:12px;text-align:right;font-weight:600;color:#059669;">
+                                        $${order.calculate_total ? parseFloat(order.calculate_total).toFixed(2) : '0.00'}
+                                    </td>
+                                    <td style="padding:12px;text-align:center;">
+                                        <div style="display:flex;gap:0.25rem;justify-content:center;align-items:center;">
+                                            <button class="btn btn-outline btn-xs" onclick="viewOrderDetails(${order.id})" title="View Order Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <div style="position:relative;">
+                                                <button class="btn btn-outline btn-xs" onclick="toggleStatusDropdown(${order.id})" title="Change Status">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <div id="statusDropdown${order.id}" class="status-dropdown" style="display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid #d1d5db;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1);z-index:1000;min-width:120px;">
+                                                    <div style="padding:0.5em;font-size:0.8em;color:#6b7280;border-bottom:1px solid #e5e7eb;">Change Status</div>
+                                                    ${["RECEIVED", "PREPARING", "DELIVERING", "DELIVERED", "CANCELLED"].map(status => 
+                                                        status !== order.status ? 
+                                                            `<div onclick="changeOrderStatus(${order.id}, '${status}')" style="padding:0.5em 0.75em;cursor:pointer;font-size:0.85em;color:#374151;hover:background:#f3f4f6;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background=''">${status.charAt(0) + status.slice(1).toLowerCase()}</div>` 
+                                                        : ''
+                                                    ).join('')}
+                                                </div>
+                                            </div>
+                                            ${canCancel ? `
+                                                <button class="btn btn-danger btn-xs" onclick="cancelOrder(${order.id})" title="Cancel Order">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = '<div style="color:#888;text-align:center;padding:2em;">No orders found for this status.</div>';
     }
 }
 
@@ -301,6 +419,161 @@ window.hideItemInfo = function() {
     if (modal) modal.style.display = 'none';
 }
 
+// Order action functions
+window.viewOrderDetails = async function(orderId) {
+    let modal = document.getElementById('orderDetailsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'orderDetailsModal';
+        modal.className = 'modal';
+        modal.innerHTML = `<div class='modal-content' id='orderDetailsModalContent'></div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) hideOrderDetails();
+        });
+    }
+    
+    const content = document.getElementById('orderDetailsModalContent');
+    content.innerHTML = '<div style="padding:2em;text-align:center;color:#2563eb;">Loading order details...</div>';
+    modal.style.display = 'block';
+    
+    try {
+        const res = await fetch(`http://localhost:8000/orders/view_order/${orderId}/`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch order details');
+        const order = await res.json();
+        
+        let itemsHtml = '';
+        if (order.items && order.items.length > 0) {
+            itemsHtml = `
+                <div style="margin-top:1em;">
+                    <h4 style="color:#374151;margin-bottom:0.5em;">Order Items:</h4>
+                    <div style="background:#f8f9fa;border-radius:6px;padding:1em;">
+                        ${order.items.map(item => `
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5em 0;border-bottom:1px solid #e5e7eb;">
+                                <div>
+                                    <div style="font-weight:600;color:#1f2937;">${item.name}</div>
+                                    <div style="color:#6b7280;font-size:0.9em;">Quantity: ${item.quantity}</div>
+                                </div>
+                                <div style="font-weight:600;color:#059669;">$${parseFloat(item.price).toFixed(2)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        content.innerHTML = `
+            <div style='padding:1.5em;max-width:500px;'>
+                <h2 style='color:#2563eb;margin-bottom:1em;'>Order #${order.id}</h2>
+                <div style='margin-bottom:0.5em;'>
+                    <strong style='color:#374151;'>Status:</strong> 
+                    <span class="badge badge-${order.status.toLowerCase()}">${order.status}</span>
+                </div>
+                <div style='margin-bottom:0.5em;'>
+                    <strong style='color:#374151;'>Address:</strong> 
+                    <span style='color:#6b7280;'>${order.address || 'N/A'}</span>
+                </div>
+                <div style='margin-bottom:0.5em;'>
+                    <strong style='color:#374151;'>Order Date:</strong> 
+                    <span style='color:#6b7280;'>${order.ordered_at ? new Date(order.ordered_at).toLocaleString() : 'N/A'}</span>
+                </div>
+                <div style='margin-bottom:0.5em;'>
+                    <strong style='color:#374151;'>Total:</strong> 
+                    <span style='color:#059669;font-weight:600;'>$${order.calculate_total ? parseFloat(order.calculate_total).toFixed(2) : '0.00'}</span>
+                </div>
+                ${itemsHtml}
+                <button onclick='hideOrderDetails()' class='btn btn-outline' style='margin-top:1.5em;'>Close</button>
+            </div>
+        `;
+    } catch {
+        content.innerHTML = `
+            <div style='padding:2em;text-align:center;color:#e74c3c;'>Failed to load order details.</div>
+            <button onclick='hideOrderDetails()' class='btn btn-outline' style='margin-top:1.5em;'>Close</button>
+        `;
+    }
+}
+
+window.hideOrderDetails = function() {
+    const modal = document.getElementById('orderDetailsModal');
+    if (modal) modal.style.display = 'none';
+}
+
+window.cancelOrder = async function(orderId) {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    
+    try {
+        const res = await fetch(`http://localhost:8000/orders/cancel_order/${orderId}/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (res.ok) {
+            alert('Order cancelled successfully!');
+            // Refresh the orders section
+            renderOrdersSection();
+        } else {
+            const error = await res.json();
+            alert(`Failed to cancel order: ${error.detail || 'Unknown error'}`);
+        }
+    } catch {
+        alert('Failed to cancel order. Please try again.');
+    }
+}
+
+// Status dropdown functions
+window.toggleStatusDropdown = function(orderId) {
+    // Close all other dropdowns first
+    const allDropdowns = document.querySelectorAll('.status-dropdown');
+    allDropdowns.forEach(dropdown => {
+        if (dropdown.id !== `statusDropdown${orderId}`) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // Toggle current dropdown
+    const dropdown = document.getElementById(`statusDropdown${orderId}`);
+    if (dropdown) {
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+window.changeOrderStatus = async function(orderId, newStatus) {
+    if (!confirm(`Are you sure you want to change the order status to ${newStatus.toLowerCase()}?`)) return;
+    
+    try {
+        const res = await fetch(`http://localhost:8000/orders/change_order_status/${orderId}/?new_status=${newStatus}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (res.ok) {
+            alert('Order status updated successfully!');
+            // Close dropdown
+            const dropdown = document.getElementById(`statusDropdown${orderId}`);
+            if (dropdown) dropdown.style.display = 'none';
+            // Refresh the orders section
+            renderOrdersSection();
+        } else {
+            const error = await res.json();
+            alert(`Failed to update order status: ${error.detail || 'Unknown error'}`);
+        }
+    } catch {
+        alert('Failed to update order status. Please try again.');
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.status-dropdown') && !event.target.closest('button[onclick*="toggleStatusDropdown"]')) {
+        const allDropdowns = document.querySelectorAll('.status-dropdown');
+        allDropdowns.forEach(dropdown => {
+            dropdown.style.display = 'none';
+        });
+    }
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
     updateNavbarAuthUI();
     // Restrict access to admins only
@@ -309,4 +582,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!allowed) return;
     fetchUserProfile();
     switchTab('profile');
-}); 
+});

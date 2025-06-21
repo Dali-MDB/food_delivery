@@ -182,7 +182,7 @@ def confirm_order(
 
 
 
-@order_router.get('/view_orders/{user_id}/')
+@order_router.get('/view_orders/{user_id}/',response_model=dict[order_status,list[OrderDisplay]])
 def view_user_orders(
     user_id: int,
     token: Annotated[str, Depends(oauth2_scheme)],
