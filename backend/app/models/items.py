@@ -10,6 +10,7 @@ class Category(Base):
 
     id = Column(Integer,primary_key=True,index=True)
     name = Column(String(50),index=True,unique=True)
+    image_url = Column(String(255),nullable=True)
 
     items = relationship("Item",back_populates="category")
 
@@ -25,7 +26,7 @@ class Item(Base):
     description = Column(Text,nullable=True)
     price = Column(Numeric(10,2))
     category_id = Column(Integer,ForeignKey('categories.id'))
-
+    image_url = Column(String(255),nullable=True)
 
     category = relationship("Category",back_populates="items")
     orders = relationship("ItemOrder",back_populates="item")

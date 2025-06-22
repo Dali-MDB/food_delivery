@@ -9,6 +9,9 @@ from app.management.admin_permission import verify_permission
 from fastapi import Depends
 from app.dependencies import sessionDep
 from app.schemas.items_schemas import ItemDisplay
+import os
+from fastapi import UploadFile,File
+from fastapi.responses import FileResponse
 
 
 
@@ -84,3 +87,53 @@ def get_items_of_category(category_id:int,db:sessionDep):
     return items
 
 
+
+
+import uuid
+
+#end point to attach images to a category
+@category_router.post('/image_category/{category_id}/attach/',response_model=CategoryDisplay)
+async def attach_image(category_id:int,db:sessionDep,token:Annotated[str,Depends(oauth2_scheme)],image:UploadFile=File(...)):
+    user = current_user(token,db)
+    verify_permission(user)    #we check if an admin is tring to perform this action
+    category_db = fetch_category(category_id,db)
+
+
+    #validate the image
+    if not image.filename.endswith(('.png','.jpg','.jpeg')):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail='invalid image format')
+    
+    #check for old image
+    if category_db.image_url:
+        os.remove(f'uploaded_files/categories/{category_db.image_url}')
+    
+    #generate a unique name for the image + make sure it contains the extension
+    category_db.image_url = f'{category_db.name}_{uuid.uuid4()}.{image.filename.split(".")[-1]}'
+    #save the image to the uploaded_files directory
+    with open(f'uploaded_files/categories/{category_db.image_url}','wb') as f:
+        f.write(await image.read())
+    db.commit()
+    db.refresh(category_db)
+    return category_db
+
+
+#end point to get the image of a category
+@category_router.get('/image_category/{category_id}/get/')
+async def get_image(category_id:int,db:sessionDep):
+    category_db = fetch_category(category_id,db)
+    return FileResponse(f'uploaded_files/categories/{category_db.image_url}')
+
+
+#end point to delete the image of a category
+@category_router.delete('/image_category/{category_id}/delete/')
+async def delete_image(category_id:int,db:sessionDep,token:Annotated[str,Depends(oauth2_scheme)]):
+    user = current_user(token,db)
+    verify_permission(user)    #we check if an admin is tring to perform this action
+    category_db = fetch_category(category_id,db)
+    if category_db.image_url:
+        os.remove(f'uploaded_files/categories/{category_db.image_url}')
+        category_db.image_url = None
+    db.commit()
+    db.refresh(category_db)
+    return category_db
+ 

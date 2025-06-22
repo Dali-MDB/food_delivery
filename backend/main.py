@@ -6,6 +6,7 @@ from app.management.category_manage import category_router
 from app.management.orders_manage import order_router
 from app.management.profile import profile_router
 from app.management.reviews_manage import reviews_router
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
@@ -24,6 +25,10 @@ app.include_router(category_router,tags=['category'])
 app.include_router(order_router,tags=['orders'])
 app.include_router(profile_router,tags=['profile'])
 app.include_router(reviews_router,tags=['review'])
+
+
+#serving images
+app.mount("/uploads", StaticFiles(directory="uploaded_files"), name="uploads")
 
 @app.get('/')
 def home():

@@ -1,4 +1,4 @@
-from fastapi import Depends,Query,routing
+from fastapi import Depends,Query,routing,UploadFile,File
 from app.schemas.items_schemas import ItemCreate,ItemDisplay,ItemUpdate
 from app.schemas.users_schemas import User
 from fastapi.exceptions import HTTPException
@@ -8,7 +8,9 @@ from app.models.items import Item,Category
 from app.authentication import oauth2_scheme,current_user
 from typing import Annotated
 from app.management.admin_permission import verify_permission
-
+from app.dependencies import sessionDep
+import os
+from fastapi.responses import FileResponse
 
 items_router = routing.APIRouter(
     prefix='/items'
@@ -82,4 +84,60 @@ def delete_item(item_id:int,db:sessionDep,token:Annotated[str,Depends(oauth2_sch
 
 
 
+import uuid
 
+#end poins to attach images to items
+@items_router.post('/image_item/{item_id}/attach/',response_model=ItemDisplay)
+async def attach_image(item_id:int,db:sessionDep,token:Annotated[str,Depends(oauth2_scheme)],image:UploadFile=File(...)):
+    user = current_user(token,db)
+    verify_permission(user)    #we check if an admin is tring to perform this action
+    item_db = fetch_item(item_id,db)
+
+
+    #validate the image
+    if not image.filename.endswith(('.png','.jpg','.jpeg')):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail='invalid image format')
+    
+    #check for old image
+    if item_db.image_url:
+        os.remove(f'uploaded_files/items/{item_db.image_url}')
+
+    
+
+    #generate a unique name for the image + make sure it contains the extension
+    item_db.image_url = f'{item_db.name}_{uuid.uuid4()}.{image.filename.split(".")[-1]}'
+    #save the image to the uploaded_files directory
+    with open(f'uploaded_files/items/{item_db.image_url}','wb') as f:
+        f.write(await image.read())
+    db.commit()
+    db.refresh(item_db)
+    return item_db
+
+#end point to get the image of an item
+@items_router.get('/image_item/{item_id}/get/')
+async def get_image(item_id:int,db:sessionDep):
+    item_db = fetch_item(item_id,db)
+    return FileResponse(f'uploaded_files/items/{item_db.image_url}')
+
+
+#end point to delete the image of an item
+@items_router.delete('/image_item/{item_id}/delete/')
+async def delete_image(item_id:int,db:sessionDep,token:Annotated[str,Depends(oauth2_scheme)]):
+    user = current_user(token,db)
+    verify_permission(user)    #we check if an admin is tring to perform this action
+    item_db = fetch_item(item_id,db)
+    if item_db.image_url:
+        os.remove(f'uploaded_files/items/{item_db.image_url}')
+        item_db.image_url = None
+    db.commit()
+    db.refresh(item_db)
+    return item_db
+
+
+ 
+
+
+
+
+
+  
