@@ -7,6 +7,144 @@ document.addEventListener('submit', function(e) {
     e.preventDefault();
 }, true);
 
+// Image upload and preview functionality
+function setupImagePreview(inputId, previewId, previewContainerId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    const container = document.getElementById(previewContainerId);
+    
+    if (input) {
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                        container.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('Please select a valid image file (PNG, JPG, JPEG)');
+                    input.value = '';
+                }
+            } else {
+                container.style.display = 'none';
+            }
+        });
+    }
+}
+
+async function uploadCategoryImage(categoryId, imageFile) {
+    const authToken = localStorage.getItem('authToken');
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    
+    try {
+        const response = await fetch(`http://localhost:8000/category/image_category/${categoryId}/attach/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to upload image');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error uploading category image:', error);
+        throw error;
+    }
+}
+
+async function uploadItemImage(itemId, imageFile) {
+    const authToken = localStorage.getItem('authToken');
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    
+    try {
+        const response = await fetch(`http://localhost:8000/items/image_item/${itemId}/attach/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to upload image');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error uploading item image:', error);
+        throw error;
+    }
+}
+
+async function deleteCategoryImage(categoryId) {
+    const authToken = localStorage.getItem('authToken');
+    try {
+        const response = await fetch(`http://localhost:8000/category/image_category/${categoryId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete image');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error deleting category image:', error);
+        throw error;
+    }
+}
+
+async function deleteItemImage(itemId) {
+    const authToken = localStorage.getItem('authToken');
+    try {
+        const response = await fetch(`http://localhost:8000/items/image_item/${itemId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete image');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error deleting item image:', error);
+        throw error;
+    }
+}
+
+function getImageUrl(type, id, imageUrl) {
+    if (!imageUrl) return null;
+    
+    // If imageUrl is already a full URL, return it as-is
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        return imageUrl;
+    }
+    
+    // Use the correct API endpoints for serving images
+    if (type === 'category') {
+        return `http://localhost:8000/category/image_category/${id}/get/`;
+    } else if (type === 'item') {
+        return `http://localhost:8000/items/image_item/${id}/get/`;
+    }
+    
+    return null;
+}
+
 async function checkAdminAccess() {
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
@@ -213,9 +351,35 @@ function displayCategories() {
         categoriesList.innerHTML = `<div class=\"admin-empty-message\">No categories found.<br>Start by adding a new category.</div>`;
         return;
     }
-    categoriesList.innerHTML = categories.map(cat => `
-        <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n            <div>\n                <div style=\"font-weight: 600; font-size: 1.1rem;\">${cat.name}</div>\n            </div>\n            <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                <button class=\"btn btn-icon\" title=\"Edit\" data-edit-category=\"${cat.id}\"><i class=\"fas fa-edit\"></i></button>\n                <button class=\"btn btn-icon\" title=\"Delete\" data-delete-category=\"${cat.id}\"><i class=\"fas fa-trash\"></i></button>\n                <button class=\"btn btn-icon\" title=\"View Items\" data-view-items=\"${cat.id}\"><i class=\"fas fa-list\"></i></button>\n            </div>\n        </div>
-    `).join('');
+    
+    categoriesList.innerHTML = categories.map(cat => {
+        const imageUrl = cat.image_url ? getImageUrl('category', cat.id, cat.image_url) : null;
+        
+        const imageHtml = imageUrl ? 
+            `<div style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; margin-right: 1em;">
+                <img src="${imageUrl}" alt="${cat.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.log('Failed to load image:', this.src);">
+            </div>` : 
+            `<div style="width: 60px; height: 60px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin-right: 1em;">
+                <i class="fas fa-image" style="color: #cbd5e1; font-size: 1.5em;"></i>
+            </div>`;
+        
+        return `
+        <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em; align-items: center;\">
+            <div style=\"display: flex; align-items: center;\">
+                ${imageHtml}
+                <div>
+                    <div style=\"font-weight: 600; font-size: 1.1rem;\">${cat.name}</div>
+                </div>
+            </div>
+            <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">
+                <button class=\"btn btn-icon\" title=\"Upload Image\" data-upload-category-image=\"${cat.id}\"><i class=\"fas fa-upload\"></i></button>
+                ${imageUrl ? `<button class=\"btn btn-icon\" title=\"Delete Image\" data-delete-category-image=\"${cat.id}\"><i class=\"fas fa-trash\"></i></button>` : ''}
+                <button class=\"btn btn-icon\" title=\"Edit\" data-edit-category=\"${cat.id}\"><i class=\"fas fa-edit\"></i></button>
+                <button class=\"btn btn-icon\" title=\"Delete\" data-delete-category=\"${cat.id}\"><i class=\"fas fa-trash\"></i></button>
+                <button class=\"btn btn-icon\" title=\"View Items\" data-view-items=\"${cat.id}\"><i class=\"fas fa-list\"></i></button>
+            </div>
+        </div>`;
+    }).join('');
     // Add event listeners for edit/delete/view
     document.querySelectorAll('[data-edit-category]').forEach(btn => {
         btn.onclick = () => showEditCategoryForm(btn.getAttribute('data-edit-category'));
@@ -226,6 +390,50 @@ function displayCategories() {
     document.querySelectorAll('[data-view-items]').forEach(btn => {
         btn.onclick = () => fetchAndDisplayItems(btn.getAttribute('data-view-items'));
     });
+    document.querySelectorAll('[data-upload-category-image]').forEach(btn => {
+        btn.onclick = () => uploadCategoryImageFromCard(btn.getAttribute('data-upload-category-image'));
+    });
+    document.querySelectorAll('[data-delete-category-image]').forEach(btn => {
+        btn.onclick = () => deleteCategoryImageFromCard(btn.getAttribute('data-delete-category-image'));
+    });
+}
+
+// Function to handle image upload from category card
+function uploadCategoryImageFromCard(categoryId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file (PNG, JPG, JPEG)');
+            return;
+        }
+        
+        try {
+            await uploadCategoryImage(categoryId, file);
+            await fetchCategories(); // Refresh the display
+            alert('Image uploaded successfully!');
+        } catch (error) {
+            alert('Failed to upload image: ' + error.message);
+        }
+    };
+    input.click();
+}
+
+// Function to handle image deletion from category card
+async function deleteCategoryImageFromCard(categoryId) {
+    if (!confirm('Are you sure you want to delete this image?')) return;
+    
+    try {
+        await deleteCategoryImage(categoryId);
+        await fetchCategories(); // Refresh the display
+        alert('Image deleted successfully!');
+    } catch (error) {
+        alert('Failed to delete image: ' + error.message);
+    }
 }
 
 // Modal logic for add/edit category
@@ -241,15 +449,19 @@ function showAddCategoryModal() {
     editCategoryContainerModal.style.display = 'none';
     adminCategoryModal.style.display = 'block';
 }
+
 function showEditCategoryModal(categoryId) {
     addCategoryContainerModal.style.display = 'none';
     editCategoryContainerModal.style.display = 'block';
     adminCategoryModal.style.display = 'block';
+    
     const cat = categories.find(c => c.id == categoryId);
     if (!cat) return;
+    
     document.getElementById('editCategoryId').value = cat.id;
     document.getElementById('editCategoryName').value = cat.name;
 }
+
 function hideAdminCategoryModal() {
     adminCategoryModal.style.display = 'none';
 }
@@ -272,10 +484,13 @@ if (editCategoryContainer) editCategoryContainer.style.display = 'none';
 addCategoryForm.onsubmit = async function(e) {
     e.preventDefault();
     const name = document.getElementById('categoryName').value.trim();
+    
     if (!name) return;
     const authToken = localStorage.getItem('authToken');
     let addError = false;
+    
     try {
+        // Create the category
         const response = await fetch('http://localhost:8000/category/add/', {
             method: 'POST',
             headers: {
@@ -284,12 +499,14 @@ addCategoryForm.onsubmit = async function(e) {
             },
             body: JSON.stringify({ name })
         });
+        
         let data = null;
         try {
             data = await response.json();
         } catch (err) {
             console.warn('Could not parse add category response as JSON:', err);
         }
+        
         console.log('Add category response:', response, data);
         if (!response.ok) {
             addError = true;
@@ -299,9 +516,11 @@ addCategoryForm.onsubmit = async function(e) {
         addError = true;
         console.error('Add category fetch error:', err);
     }
+    
     addCategoryForm.reset();
     hideAdminCategoryModal();
     await fetchCategories();
+    
     // Check if the category appears in the refreshed list
     const found = Array.isArray(categories) && categories.some(cat => cat.name === name);
     if (addError && !found) {
@@ -317,8 +536,10 @@ editCategoryForm.onsubmit = async function(e) {
     e.preventDefault();
     const id = document.getElementById('editCategoryId').value;
     const name = document.getElementById('editCategoryName').value.trim();
+    
     const authToken = localStorage.getItem('authToken');
     try {
+        // Update the category name
         const response = await fetch(`http://localhost:8000/category/${id}/update/`, {
             method: 'PUT',
             headers: {
@@ -327,16 +548,21 @@ editCategoryForm.onsubmit = async function(e) {
             },
             body: JSON.stringify({ name })
         });
+        
         if (!response.ok) throw new Error('Failed to update category');
+        
         editCategoryForm.reset();
-        editCategoryContainer.style.display = 'none';
-        addCategoryContainer.style.display = 'flex';
-        setActiveSection('categories');
-        fetchCategories();
-    } catch {
-        alert('Failed to update category');
+        hideAdminCategoryModal();
+        await fetchCategories();
+    } catch (error) {
+        alert('Failed to update category: ' + error.message);
     }
 };
+
+// Handle category image upload when file is selected
+document.addEventListener('DOMContentLoaded', function() {
+    // This function is no longer needed since image upload is handled directly on cards
+});
 
 function setActiveSection(sectionId) {
     document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
@@ -436,6 +662,7 @@ function displayItemsList() {
         itemsList.innerHTML = `<div class=\"admin-empty-message\">No items found.<br>Try adding a new item or changing the filter above.</div>`;
         return;
     }
+    
     // Sort items
     let sortedItems = [...allItems];
     const sortBy = itemsSortSelect ? itemsSortSelect.value : 'name';
@@ -459,9 +686,35 @@ function displayItemsList() {
                 const cat = allCategories.find(c => c.id === item.category_id);
                 if (cat) catName = cat.name;
             }
+            
+            const imageUrl = item.image_url ? getImageUrl('item', item.id, item.image_url) : null;
+            
+            const imageHtml = imageUrl ? 
+                `<div style="width: 80px; height: 80px; border-radius: 8px; overflow: hidden; margin-right: 1em;">
+                    <img src="${imageUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.log('Failed to load image:', this.src);">
+                </div>` : 
+                `<div style="width: 80px; height: 80px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin-right: 1em;">
+                    <i class="fas fa-image" style="color: #cbd5e1; font-size: 1.5em;"></i>
+                </div>`;
+            
             return `
-            <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                <div>\n                    <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                    <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>\n                    <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                    <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                </div>\n                <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                    <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                    <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                </div>\n            </div>
-            `;
+            <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em; align-items: center;\">
+                <div style=\"display: flex; align-items: center;\">
+                    ${imageHtml}
+                    <div>
+                        <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>
+                        <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>
+                        <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>
+                        <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>
+                    </div>
+                </div>
+                <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">
+                    <button class=\"btn btn-icon\" title=\"Upload Image\" data-upload-item-image=\"${item.id}\"><i class=\"fas fa-upload\"></i></button>
+                    ${imageUrl ? `<button class=\"btn btn-icon\" title=\"Delete Image\" data-delete-item-image=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>` : ''}
+                    <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>
+                    <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>
+                </div>
+            </div>`;
         }).join('');
         html += '</div></div>';
     } else {
@@ -486,8 +739,35 @@ function displayItemsList() {
             html += `<div><h3 style=\"margin-bottom: 1em; color: #2563eb;\">${cat.name}</h3><div style=\"display: flex; flex-direction: column; gap: 0.75em;\">`;
             html += group.map(item => {
                 let catName = item.category_name || cat.name;
+                
+                const imageUrl = item.image_url ? getImageUrl('item', item.id, item.image_url) : null;
+                
+                const imageHtml = imageUrl ? 
+                    `<div style="width: 80px; height: 80px; border-radius: 8px; overflow: hidden; margin-right: 1em;">
+                        <img src="${imageUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.log('Failed to load image:', this.src);">
+                    </div>` : 
+                    `<div style="width: 80px; height: 80px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin-right: 1em;">
+                        <i class="fas fa-image" style="color: #cbd5e1; font-size: 1.5em;"></i>
+                    </div>`;
+                
                 return `
-                <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                    <div>\n                        <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                        <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>\n                        <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                        <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                    </div>\n                    <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                        <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                        <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                    </div>\n                </div>
+                <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em; align-items: center;\">
+                    <div style=\"display: flex; align-items: center;\">
+                        ${imageHtml}
+                        <div>
+                            <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>
+                            <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>
+                            <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>
+                            <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">
+                        <button class=\"btn btn-icon\" title=\"Upload Image\" data-upload-item-image=\"${item.id}\"><i class=\"fas fa-upload\"></i></button>
+                        ${imageUrl ? `<button class=\"btn btn-icon\" title=\"Delete Image\" data-delete-item-image=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>` : ''}
+                        <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>
+                        <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>
+                    </div>
+                </div>
                 `;
             }).join('');
             html += '</div></div>';
@@ -496,8 +776,35 @@ function displayItemsList() {
             html += `<div><h3 style=\"margin-bottom: 1em; color: #2563eb;\">Uncategorized</h3><div style=\"display: flex; flex-direction: column; gap: 0.75em;\">`;
             html += itemsByCategory['uncategorized'].map(item => {
                 let catName = item.category_name || 'Uncategorized';
+                
+                const imageUrl = item.image_url ? getImageUrl('item', item.id, item.image_url) : null;
+                
+                const imageHtml = imageUrl ? 
+                    `<div style="width: 80px; height: 80px; border-radius: 8px; overflow: hidden; margin-right: 1em;">
+                        <img src="${imageUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.log('Failed to load image:', this.src);">
+                    </div>` : 
+                    `<div style="width: 80px; height: 80px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin-right: 1em;">
+                        <i class="fas fa-image" style="color: #cbd5e1; font-size: 1.5em;"></i>
+                    </div>`;
+                
                 return `
-                <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em;\">\n                    <div>\n                        <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>\n                        <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>\n                        <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>\n                        <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>\n                    </div>\n                    <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">\n                        <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>\n                        <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>\n                    </div>\n                </div>
+                <div class=\"admin-card\" style=\"justify-content: space-between; gap: 0.75em; align-items: center;\">
+                    <div style=\"display: flex; align-items: center;\">
+                        ${imageHtml}
+                        <div>
+                            <div style=\"font-weight: 600; font-size: 1.1rem;\">${item.name}</div>
+                            <div style=\"color: #2563eb; font-size: 0.97em; margin-bottom: 0.2em;\">${catName}</div>
+                            <div style=\"color: #888; font-size: 0.95rem; margin-bottom: 0.5em;\">${item.description || ''}</div>
+                            <div style=\"color: #059669; font-size: 1rem; font-weight: 600; margin-top: 1em;\">$${parseFloat(item.price).toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div style=\"display: flex; gap: 0.5em; align-items: center; margin-left: auto;\">
+                        <button class=\"btn btn-icon\" title=\"Upload Image\" data-upload-item-image=\"${item.id}\"><i class=\"fas fa-upload\"></i></button>
+                        ${imageUrl ? `<button class=\"btn btn-icon\" title=\"Delete Image\" data-delete-item-image=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>` : ''}
+                        <button class=\"btn btn-icon\" title=\"Edit\" data-edit-item=\"${item.id}\"><i class=\"fas fa-edit\"></i></button>
+                        <button class=\"btn btn-icon\" title=\"Delete\" data-delete-item=\"${item.id}\"><i class=\"fas fa-trash\"></i></button>
+                    </div>
+                </div>
                 `;
             }).join('');
             html += '</div></div>';
@@ -507,12 +814,58 @@ function displayItemsList() {
         html = `<div class=\"admin-empty-message\">No items found${filterCat !== 'all' ? ' in this category' : ''}.<br>Try adding a new item or changing the filter above.</div>`;
     }
     itemsList.innerHTML = html;
+    
+    // Add event listeners for all buttons
     document.querySelectorAll('[data-edit-item]').forEach(btn => {
         btn.onclick = () => showEditItemForm(btn.getAttribute('data-edit-item'));
     });
     document.querySelectorAll('[data-delete-item]').forEach(btn => {
         btn.onclick = () => deleteItem(btn.getAttribute('data-delete-item'));
     });
+    document.querySelectorAll('[data-upload-item-image]').forEach(btn => {
+        btn.onclick = () => uploadItemImageFromCard(btn.getAttribute('data-upload-item-image'));
+    });
+    document.querySelectorAll('[data-delete-item-image]').forEach(btn => {
+        btn.onclick = () => deleteItemImageFromCard(btn.getAttribute('data-delete-item-image'));
+    });
+}
+
+// Function to handle image upload from item card
+function uploadItemImageFromCard(itemId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file (PNG, JPG, JPEG)');
+            return;
+        }
+        
+        try {
+            await uploadItemImage(itemId, file);
+            await fetchAllItems(); // Refresh the display
+            alert('Image uploaded successfully!');
+        } catch (error) {
+            alert('Failed to upload image: ' + error.message);
+        }
+    };
+    input.click();
+}
+
+// Function to handle image deletion from item card
+async function deleteItemImageFromCard(itemId) {
+    if (!confirm('Are you sure you want to delete this image?')) return;
+    
+    try {
+        await deleteItemImage(itemId);
+        await fetchAllItems(); // Refresh the display
+        alert('Image deleted successfully!');
+    } catch (error) {
+        alert('Failed to delete image: ' + error.message);
+    }
 }
 
 if (itemsSortSelect) {
@@ -539,6 +892,7 @@ function showAddItemModal() {
     adminItemModal.style.display = 'block';
     fetchAllCategoriesForItems();
 }
+
 function showEditItemModal(itemId) {
     // If categories are not loaded, fetch them first, then call this function again
     if (!allCategories || allCategories.length === 0) {
@@ -548,16 +902,20 @@ function showEditItemModal(itemId) {
     addItemContainerModal.style.display = 'none';
     editItemContainerModal.style.display = 'block';
     adminItemModal.style.display = 'block';
+    
     const item = allItems.find(i => i.id == itemId);
     if (!item) return;
+    
     document.getElementById('editItemId').value = item.id;
     document.getElementById('editItemName').value = item.name;
     document.getElementById('editItemDescription').value = item.description || '';
     document.getElementById('editItemPrice').value = item.price;
+    
     // Find the category name
     const cat = allCategories.find(c => c.id == item.category_id);
     const catName = cat ? cat.name : '';
     document.getElementById('editItemCategoryName').textContent = catName ? `Current: ${catName}` : '';
+    
     // Populate dropdown with all categories
     let options = allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     const select = document.getElementById('editItemCategory');
@@ -574,6 +932,7 @@ function showEditItemModal(itemId) {
         }
     }
 }
+
 function hideAdminItemModal() {
     adminItemModal.style.display = 'none';
 }
@@ -599,9 +958,11 @@ addItemForm.onsubmit = async function(e) {
     const description = document.getElementById('itemDescription').value.trim();
     const price = parseFloat(document.getElementById('itemPrice').value);
     const category_id = parseInt(document.getElementById('itemCategory').value);
+    
     if (!name || isNaN(price) || isNaN(category_id)) return;
     const authToken = localStorage.getItem('authToken');
     let addError = false;
+    
     try {
         const response = await fetch('http://localhost:8000/items/add/', {
             method: 'POST',
@@ -640,6 +1001,42 @@ addItemForm.onsubmit = async function(e) {
     }
 };
 
+editItemForm.onsubmit = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('editItemId').value;
+    const name = document.getElementById('editItemName').value.trim();
+    const description = document.getElementById('editItemDescription').value.trim();
+    const price = parseFloat(document.getElementById('editItemPrice').value);
+    const category_id = parseInt(document.getElementById('editItemCategory').value);
+    
+    if (!name || isNaN(price) || isNaN(category_id)) return;
+    const authToken = localStorage.getItem('authToken');
+    try {
+        // Update the item details
+        const response = await fetch(`http://localhost:8000/items/${id}/update/`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, description, price, category_id })
+        });
+        
+        if (!response.ok) throw new Error('Failed to update item');
+        
+        await fetchAllItems();
+        editItemForm.reset();
+        hideAdminItemModal();
+    } catch (error) {
+        alert('Failed to update item: ' + error.message);
+    }
+};
+
+// Handle item image upload when file is selected
+document.addEventListener('DOMContentLoaded', function() {
+    // This function is no longer needed since image upload is handled directly on cards
+});
+
 // Add success and error message containers if not present
 if (!document.getElementById('editItemSuccess')) {
     const msgDiv = document.createElement('div');
@@ -655,37 +1052,6 @@ if (!document.getElementById('editItemError')) {
 }
 const editItemSuccess = document.getElementById('editItemSuccess');
 const editItemError = document.getElementById('editItemError');
-
-editItemForm.onsubmit = async function(e) {
-    e.preventDefault();
-    const id = document.getElementById('editItemId').value;
-    const name = document.getElementById('editItemName').value.trim();
-    const description = document.getElementById('editItemDescription').value.trim();
-    const price = parseFloat(document.getElementById('editItemPrice').value);
-    const category_id = parseInt(document.getElementById('editItemCategory').value);
-    if (!name || isNaN(price) || isNaN(category_id)) return;
-    const authToken = localStorage.getItem('authToken');
-    try {
-        const response = await fetch(`http://localhost:8000/items/${id}/update/`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, description, price, category_id })
-        });
-        if (response.ok) {
-            await fetchAllItems();
-            editItemForm.reset();
-            editItemContainer.style.display = 'none';
-            addItemContainer.style.display = 'flex';
-            setActiveSection('items');
-        }
-        // No messages shown regardless of result
-    } catch {
-        // No messages shown on error
-    }
-};
 
 if (cancelEditItemBtn) {
     cancelEditItemBtn.onclick = function() {

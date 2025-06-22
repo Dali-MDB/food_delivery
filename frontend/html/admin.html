@@ -22,8 +22,8 @@
             <div class="nav-menu">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="categories.html" class="nav-link">Menu</a>
-                <a href="orders.html" class="nav-link">Orders</a>
-                <a href="reviews.html" class="nav-link">Reviews</a>
+                <a href="index.html#reviews" class="nav-link">Reviews</a>
+                <a href="index.html#contact" class="nav-link">Contact</a>
             </div>
             <div class="nav-auth">
                 <button id="loginBtn" class="btn btn-outline">Login</button>
@@ -343,7 +343,7 @@
     
     <!-- Item Add/Edit Modal -->
     <div id="adminItemModal" class="modal" style="display:none;">
-      <div class="modal-content" style="max-width: 380px;">
+      <div class="modal-content" style="max-width: 500px;">
         <button id="closeAdminItemModal" class="btn btn-secondary" style="position: absolute; top: 12px; right: 18px; z-index: 2;">&times;</button>
         <div id="addItemContainerModal" style="display:none;">
           <form id="addItemForm" style="display: flex; flex-direction: column; gap: 0.5em;">
@@ -391,6 +391,25 @@
               <div id="editItemCategoryName" style="font-size: 0.98em; color: #2563eb; margin-bottom: 0.25em;"></div>
               <select id="editItemCategory" required class="form-control"></select>
             </div>
+            <div id="editItemImageSection" style="margin-top: 1em;">
+              <div id="editItemCurrentImage" style="display: none; margin-bottom: 1em;">
+                <p style="font-size: 0.9em; color: #2563eb; margin-bottom: 0.5em;">Current Image:</p>
+                <img id="editItemCurrentImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #e1e5e9;">
+              </div>
+              <div style="display: flex; gap: 0.5em; margin-bottom: 1em;">
+                <button type="button" id="uploadItemImage" class="btn btn-primary" style="font-size: 0.9em;">
+                  <i class="fas fa-upload"></i> Upload Image
+                </button>
+                <button type="button" id="deleteItemImage" class="btn btn-danger" style="font-size: 0.9em; display: none;">
+                  <i class="fas fa-trash"></i> Delete Image
+                </button>
+              </div>
+              <input type="file" id="editItemImageInput" accept="image/*" style="display: none;">
+              <div id="editItemNewImagePreview" style="display: none;">
+                <p style="font-size: 0.9em; color: #2563eb; margin-bottom: 0.5em;">New Image Preview:</p>
+                <img id="editItemNewImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #e1e5e9;">
+              </div>
+            </div>
             <div style="display: flex; gap: 1em; justify-content: flex-end; margin-top: 1em;">
               <button type="submit" class="btn btn-primary">Save Changes</button>
               <button type="button" id="cancelEditItemModal" class="btn btn-secondary">Cancel</button>
@@ -402,7 +421,7 @@
 
     <!-- Category Add/Edit Modal -->
     <div id="adminCategoryModal" class="modal" style="display:none;">
-      <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-content" style="max-width: 500px;">
         <button id="closeAdminCategoryModal" class="btn btn-secondary" style="position: absolute; top: 12px; right: 18px; z-index: 2;">&times;</button>
         <div id="addCategoryContainerModal" style="display:none;">
           <form id="addCategoryForm" style="display: flex; flex-direction: column; gap: 0.5em;">
@@ -424,6 +443,25 @@
             <div class="modal-form-row">
               <label for="editCategoryName">Name</label>
               <input type="text" id="editCategoryName" required class="form-control">
+            </div>
+            <div id="editCategoryImageSection" style="margin-top: 1em;">
+              <div id="editCategoryCurrentImage" style="display: none; margin-bottom: 1em;">
+                <p style="font-size: 0.9em; color: #2563eb; margin-bottom: 0.5em;">Current Image:</p>
+                <img id="editCategoryCurrentImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #e1e5e9;">
+              </div>
+              <div style="display: flex; gap: 0.5em; margin-bottom: 1em;">
+                <button type="button" id="uploadCategoryImage" class="btn btn-primary" style="font-size: 0.9em;">
+                  <i class="fas fa-upload"></i> Upload Image
+                </button>
+                <button type="button" id="deleteCategoryImage" class="btn btn-danger" style="font-size: 0.9em; display: none;">
+                  <i class="fas fa-trash"></i> Delete Image
+                </button>
+              </div>
+              <input type="file" id="editCategoryImageInput" accept="image/*" style="display: none;">
+              <div id="editCategoryNewImagePreview" style="display: none;">
+                <p style="font-size: 0.9em; color: #2563eb; margin-bottom: 0.5em;">New Image Preview:</p>
+                <img id="editCategoryNewImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #e1e5e9;">
+              </div>
             </div>
             <div style="display: flex; gap: 1em; justify-content: flex-end; margin-top: 1em;">
               <button type="submit" class="btn btn-primary">Save Changes</button>

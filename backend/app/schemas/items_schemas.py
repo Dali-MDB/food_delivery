@@ -17,6 +17,7 @@ class ItemDisplay(ItemBase):
     id : int 
     category_name : str
     category_id : int
+    image_url : str | None = None
 
     class Config:
         orm_model = True
@@ -53,6 +54,7 @@ class CategoryCreate(CategoryBase):
 class CategoryDisplay(CategoryBase):
     id : int
     items : List[Item] = []
+    image_url : str | None = None
 
 class Category(CategoryBase):
     id : int
